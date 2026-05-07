@@ -65,7 +65,7 @@
   .status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
   .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); }
   .status-dot.running { background: var(--green); animation: pulse 2s infinite; }
-  .status-dot.paused { background: var(--amber); }
+  .status-dot.paused { background: var(--amber); animation: pulse 1.5s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
   .status-text { font-size: 12px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; }
   .status-text.running { color: var(--green); }
@@ -230,7 +230,7 @@
 
 <div class="app">
   <header>
-    <div class="logo">Gross<span>ELAN</span> · Time Tracker</div>
+    <div class="logo">Gross<span>ELAN</span> &middot; Time Tracker</div>
     <div class="date-badge" id="header-date"></div>
   </header>
 
@@ -258,7 +258,7 @@
         <div class="person-chip" data-person="Razvan Chiaga" onclick="selectPerson(this)">Razvan</div>
       </div>
 
-      <div class="form-label">Project & activity</div>
+      <div class="form-label">Project &amp; activity</div>
       <div class="form-grid">
         <select id="project-select">
           <option value="Allgemein 2026">Allgemein 2026</option>
@@ -341,218 +341,288 @@ let pauseStart = null;
 let totalPausedMs = 0;
 let timerInterval = null;
 let entries = [];
-let currentEntryId = null;
 
 function selectPerson(el) {
-  document.querySelectorAll('.person-chip').forEach(c => c.classList.remove('active'));
+  document.querySelectorAll('.person-chip').forEach(function(c) { c.classList.remove('active'); });
   el.classList.add('active');
   currentPerson = el.dataset.person;
 }
 
 function now() { return new Date().toISOString(); }
-
-function pad(n) { return String(Math.floor(n)).padStart(2,'0'); }
-
+function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
 function formatElapsed(ms) {
-  const s = Math.floor(ms/1000);
-  return pad(s/3600) + ':' + pad((s%3600)/60) + ':' + pad(s%60);
+  var s = Math.floor(ms / 1000);
+  return pad(s / 3600) + ':' + pad((s % 3600) / 60) + ':' + pad(s % 60);
 }
-
 function formatTime(iso) {
-  const d = new Date(iso);
+  var d = new Date(iso);
   return pad(d.getHours()) + ':' + pad(d.getMinutes());
 }
 
 function updateTimer() {
-  if(state === 'idle') return;
-  const now = Date.now();
-  let elapsed = now - timerStart - totalPausedMs;
-  if(state === 'paused') elapsed = now - timerStart - totalPausedMs - (now - pauseStart);
-  document.getElementById('timer-display').textContent = formatElapsed(Math.max(0, elapsed));
+  if (state === 'idle') return;
+  var nowMs = Date.now();
+  if (state === 'running') {
+    var elapsed = nowMs - timerStart - totalPausedMs;
+    document.getElementById('timer-display').textContent = formatElapsed(Math.max(0, elapsed));
+  } else if (state === 'paused') {
+    // FIX 1: Timer counts UP showing how long the current pause has lasted (orange, not frozen)
+    var pauseElapsed = nowMs - pauseStart;
+    document.getElementById('timer-display').textContent = formatElapsed(Math.max(0, pauseElapsed));
+    // Keep meta updated with work accumulated before this pause
+    var workMs = pauseStart - timerStart - totalPausedMs;
+    var proj = document.getElementById('project-select').value;
+    var tag  = document.getElementById('tag-select').value;
+    document.getElementById('timer-meta').innerHTML =
+      '<span>' + proj + '</span> &middot; ' + tag + ' &middot; work so far: ' + formatElapsed(Math.max(0, workMs));
+  }
 }
 
 function setUIState(s) {
   state = s;
-  const card = document.getElementById('timer-card');
-  const dot = document.getElementById('status-dot');
-  const txt = document.getElementById('status-text');
-  const disp = document.getElementById('timer-display');
-  const meta = document.getElementById('timer-meta');
-  const grid = document.getElementById('btn-grid');
-  const proj = document.getElementById('project-select').value;
-  const tag = document.getElementById('tag-select').value;
+  var card = document.getElementById('timer-card');
+  var dot  = document.getElementById('status-dot');
+  var txt  = document.getElementById('status-text');
+  var disp = document.getElementById('timer-display');
+  var meta = document.getElementById('timer-meta');
+  var grid = document.getElementById('btn-grid');
+  var proj = document.getElementById('project-select').value;
+  var tag  = document.getElementById('tag-select').value;
 
   card.className = 'timer-card ' + (s !== 'idle' ? s : '');
-  dot.className = 'status-dot ' + (s !== 'idle' ? s : '');
+  dot.className  = 'status-dot '  + (s !== 'idle' ? s : '');
   disp.className = 'timer-display ' + (s !== 'idle' ? s : '');
 
-  if(s === 'idle') {
+  clearInterval(timerInterval);
+
+  if (s === 'idle') {
     txt.textContent = 'Idle'; txt.className = 'status-text';
     disp.textContent = '00:00:00';
     meta.textContent = 'Select a project and check in';
-    grid.innerHTML = `<button class="btn btn-start btn-full" onclick="doCheckin()">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
-      Check in</button>`;
-    clearInterval(timerInterval);
-  } else if(s === 'running') {
+    grid.innerHTML = '<button class="btn btn-start btn-full" onclick="doCheckin()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>'
+      + 'Check in</button>';
+
+  } else if (s === 'running') {
     txt.textContent = 'Running'; txt.className = 'status-text running';
-    meta.innerHTML = `<span>${proj}</span> · ${tag} · since ${formatTime(new Date(timerStart).toISOString())}`;
-    grid.innerHTML = `
-      <button class="btn btn-pause" onclick="doPause()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-        Pause</button>
-      <button class="btn btn-stop" onclick="doCheckout()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        Check out</button>
-      <button class="btn btn-new btn-full" onclick="doNewEntry()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        New entry (change project/tag)</button>`;
-    clearInterval(timerInterval);
+    meta.innerHTML = '<span>' + proj + '</span> &middot; ' + tag + ' &middot; since ' + formatTime(new Date(timerStart).toISOString());
+    grid.innerHTML =
+      '<button class="btn btn-pause" onclick="doPause()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+      + 'Pause</button>'
+      + '<button class="btn btn-stop" onclick="doCheckout()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
+      + 'Check out</button>'
+      + '<button class="btn btn-new btn-full" onclick="doNewEntry()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
+      + 'New entry (change project/tag)</button>';
     timerInterval = setInterval(updateTimer, 1000);
-  } else if(s === 'paused') {
+
+  } else if (s === 'paused') {
     txt.textContent = 'Paused'; txt.className = 'status-text paused';
-    meta.innerHTML = `<span>${proj}</span> · ${tag} · paused`;
-    grid.innerHTML = `
-      <button class="btn btn-resume" onclick="doResume()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
-        Resume</button>
-      <button class="btn btn-stop" onclick="doCheckout()">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        Check out</button>`;
-    clearInterval(timerInterval);
+    var workMs = pauseStart - timerStart - totalPausedMs;
+    meta.innerHTML = '<span>' + proj + '</span> &middot; ' + tag + ' &middot; work so far: ' + formatElapsed(Math.max(0, workMs));
+    disp.textContent = '00:00:00';
+    grid.innerHTML =
+      '<button class="btn btn-resume" onclick="doResume()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>'
+      + 'Resume</button>'
+      + '<button class="btn btn-stop" onclick="doCheckout()">'
+      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
+      + 'Check out</button>';
+    // FIX 1: Keep interval running so pause duration counts up in orange
+    timerInterval = setInterval(updateTimer, 1000);
   }
 }
 
-function showToast(msg, type='') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'toast show ' + type;
-  setTimeout(() => t.className = 'toast', 2500);
+function showToast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || '');
+  setTimeout(function() { t.className = 'toast'; }, 3000);
 }
 
 function loading(show) {
   document.getElementById('loading').className = 'loading-overlay' + (show ? ' show' : '');
 }
 
-async function callWebhook(action, extra={}) {
-  const payload = {
-    person: currentPerson,
-    project: document.getElementById('project-select').value,
-    tag: document.getElementById('tag-select').value,
-    timestamp: now(),
-    ...extra
-  };
+// FIX 3: callWebhook now returns {ok, status, data} instead of a plain boolean
+async function callWebhook(action, extra) {
+  var payload = Object.assign({
+    person:    currentPerson,
+    project:   document.getElementById('project-select').value,
+    tag:       document.getElementById('tag-select').value,
+    timestamp: now()
+  }, extra || {});
   try {
-    const r = await fetch(WEBHOOKS[action], {
+    var r = await fetch(WEBHOOKS[action], {
       method: 'POST',
-      headers: {'Content-Type':'application/json'},
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    return r.ok;
-  } catch(e) { return false; }
+    var data = await r.json().catch(function() { return {}; });
+    return { ok: r.ok, status: r.status, data: data };
+  } catch(e) {
+    return { ok: false, status: 0, data: {} };
+  }
 }
 
-function addEntry(project, tag, startTime, endTime=null, status='active') {
-  entries.push({project, tag, startTime, endTime, status, id: Date.now()});
+function addEntry(project, tag, startTime) {
+  entries.push({ project: project, tag: tag, startTime: startTime, endTime: null, status: 'active', breakMs: 0, id: Date.now() });
   renderEntries();
 }
 
+// FIX 2: renderEntries shows accumulated break time on entries with pauses
 function renderEntries() {
-  const list = document.getElementById('entries-list');
-  if(!entries.length) {
-    list.innerHTML = `<div class="entry" style="justify-content:center;padding:20px"><span style="font-size:13px;color:var(--text3)">No entries yet today</span></div>`;
+  var list = document.getElementById('entries-list');
+  if (!entries.length) {
+    list.innerHTML = '<div class="entry" style="justify-content:center;padding:20px"><span style="font-size:13px;color:var(--text3)">No entries yet today</span></div>';
     return;
   }
-  list.innerHTML = entries.slice().reverse().map(e => {
-    const tagClass = e.tag.includes('501') ? 'tag-montage' : e.tag.includes('900') ? 'tag-fahrzeit' : e.tag.includes('750') ? 'tag-buro' : 'tag-other';
-    const dur = e.status === 'active' ? `<span class="entry-dur active">${formatElapsed(Date.now() - new Date(e.startTime).getTime())} ▶</span>` :
-      e.endTime ? `<span class="entry-dur">${formatElapsed(new Date(e.endTime) - new Date(e.startTime))}</span>` : '';
-    return `<div class="entry">
-      <div class="entry-left">
-        <span class="entry-tag ${tagClass}">${e.tag.split(' ').slice(0,2).join(' ')}</span>
-        <div class="entry-project">${e.project}</div>
-      </div>
-      <div class="entry-right">
-        <div class="entry-time">${formatTime(e.startTime)}${e.endTime ? ' – ' + formatTime(e.endTime) : ' – now'}</div>
-        ${dur}
-      </div>
-    </div>`;
+  list.innerHTML = entries.slice().reverse().map(function(e) {
+    var tagClass = e.tag.includes('501') ? 'tag-montage'
+      : e.tag.includes('900') ? 'tag-fahrzeit'
+      : e.tag.includes('750') ? 'tag-buro'
+      : 'tag-other';
+
+    var durStr = '';
+    if (e.status === 'active') {
+      var elapsed = Date.now() - new Date(e.startTime).getTime() - (e.breakMs || 0);
+      durStr = '<span class="entry-dur active">' + formatElapsed(Math.max(0, elapsed)) + ' &#9654;</span>';
+    } else if (e.endTime) {
+      var netMs = new Date(e.endTime) - new Date(e.startTime) - (e.breakMs || 0);
+      var inner = formatElapsed(Math.max(0, netMs));
+      if (e.breakMs > 0) {
+        inner += ' <span style="color:var(--amber);font-size:10px">&#9646; ' + formatElapsed(e.breakMs) + '</span>';
+      }
+      durStr = '<span class="entry-dur">' + inner + '</span>';
+    }
+
+    return '<div class="entry">'
+      + '<div class="entry-left">'
+      + '<span class="entry-tag ' + tagClass + '">' + e.tag.split(' ').slice(0,2).join(' ') + '</span>'
+      + '<div class="entry-project">' + e.project + '</div>'
+      + '</div>'
+      + '<div class="entry-right">'
+      + '<div class="entry-time">' + formatTime(e.startTime) + (e.endTime ? ' &ndash; ' + formatTime(e.endTime) : ' &ndash; now') + '</div>'
+      + durStr
+      + '</div>'
+      + '</div>';
   }).join('');
 }
 
 async function doCheckin() {
   loading(true);
-  const ok = await callWebhook('checkin');
+  var res = await callWebhook('checkin');
   loading(false);
-  if(ok) {
-    timerStart = Date.now(); totalPausedMs = 0;
-    addEntry(document.getElementById('project-select').value, document.getElementById('tag-select').value, new Date().toISOString());
+  if (res.ok) {
+    timerStart = Date.now();
+    totalPausedMs = 0;
+    addEntry(
+      document.getElementById('project-select').value,
+      document.getElementById('tag-select').value,
+      new Date().toISOString()
+    );
     setUIState('running');
     showToast('Checked in', 'success');
-  } else showToast('Connection error — check your network', 'error');
+  } else if (res.status === 409) {
+    // FIX 3: Show 409 error message from the backend instead of failing silently
+    showToast(res.data.error || 'Ya hay una entrada activa para esta persona', 'error');
+  } else {
+    showToast('Connection error — check your network', 'error');
+  }
 }
 
 async function doPause() {
   loading(true);
-  const ok = await callWebhook('pause');
+  var res = await callWebhook('pause');
   loading(false);
-  if(ok) {
+  if (res.ok) {
     pauseStart = Date.now();
-    if(entries.length) entries[entries.length-1].status = 'paused';
+    var entry = entries[entries.length - 1];
+    if (entry) entry.status = 'paused';
     renderEntries();
     setUIState('paused');
     showToast('Paused', 'success');
-  } else showToast('Connection error', 'error');
+  } else {
+    showToast('Connection error', 'error');
+  }
 }
 
 async function doResume() {
   loading(true);
-  const ok = await callWebhook('resume');
+  var res = await callWebhook('resume');
   loading(false);
-  if(ok) {
-    totalPausedMs += Date.now() - pauseStart;
-    addEntry(document.getElementById('project-select').value, document.getElementById('tag-select').value, new Date().toISOString());
+  if (res.ok) {
+    var pauseDuration = Date.now() - pauseStart;
+    totalPausedMs += pauseDuration;
+    // FIX 2: Update existing entry (accumulate break) — don't create a new entry
+    var entry = entries[entries.length - 1];
+    if (entry) {
+      entry.breakMs = (entry.breakMs || 0) + pauseDuration;
+      entry.status = 'active';
+    }
+    renderEntries();
     setUIState('running');
     showToast('Resumed', 'success');
-  } else showToast('Connection error', 'error');
+  } else {
+    showToast('Connection error', 'error');
+  }
 }
 
 async function doCheckout() {
   loading(true);
-  const ok = await callWebhook('checkout');
+  var res = await callWebhook('checkout');
   loading(false);
-  if(ok) {
-    if(entries.length) { entries[entries.length-1].endTime = new Date().toISOString(); entries[entries.length-1].status = 'done'; }
+  if (res.ok) {
+    var entry = entries[entries.length - 1];
+    if (entry) { entry.endTime = new Date().toISOString(); entry.status = 'done'; }
     renderEntries();
     setUIState('idle');
     showToast('Checked out', 'success');
-  } else showToast('Connection error', 'error');
+  } else {
+    showToast('Connection error', 'error');
+  }
 }
 
 async function doNewEntry() {
   loading(true);
-  const ok = await callWebhook('checkout');
+  var res = await callWebhook('checkout');
   loading(false);
-  if(ok) {
-    if(entries.length) { entries[entries.length-1].endTime = new Date().toISOString(); entries[entries.length-1].status = 'done'; }
-    setTimeout(async () => {
+  if (res.ok) {
+    var entry = entries[entries.length - 1];
+    if (entry) { entry.endTime = new Date().toISOString(); entry.status = 'done'; }
+    setTimeout(async function() {
       loading(true);
-      const ok2 = await callWebhook('checkin');
+      var res2 = await callWebhook('checkin');
       loading(false);
-      if(ok2) {
-        timerStart = Date.now(); totalPausedMs = 0;
-        addEntry(document.getElementById('project-select').value, document.getElementById('tag-select').value, new Date().toISOString());
+      if (res2.ok) {
+        timerStart = Date.now();
+        totalPausedMs = 0;
+        addEntry(
+          document.getElementById('project-select').value,
+          document.getElementById('tag-select').value,
+          new Date().toISOString()
+        );
         setUIState('running');
         showToast('New entry started', 'success');
+      } else if (res2.status === 409) {
+        showToast(res2.data.error || 'Ya hay una entrada activa', 'error');
+      } else {
+        showToast('Connection error', 'error');
       }
     }, 500);
+  } else {
+    showToast('Connection error', 'error');
   }
 }
 
 function updateHeaderDate() {
-  const d = new Date();
-  const days = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('header-date').textContent = days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+  var d = new Date();
+  var days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('header-date').textContent =
+    days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
 }
 
 updateHeaderDate();
