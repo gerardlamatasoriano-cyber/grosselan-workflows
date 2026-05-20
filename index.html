@@ -2,631 +2,2682 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>GrossELAN Time Tracker</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GrossELAN · Tickets</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #0f0f0f;
-    --surface: #1a1a1a;
-    --surface2: #222222;
-    --border: #2e2e2e;
-    --text: #f0f0f0;
-    --text2: #888;
-    --text3: #555;
-    --green: #4ade80;
-    --green-dim: #166534;
-    --green-bg: #052e16;
-    --amber: #fbbf24;
-    --amber-bg: #1c1000;
-    --red: #f87171;
-    --red-bg: #1c0000;
-    --blue: #60a5fa;
-    --blue-bg: #0a1628;
-    --purple: #a78bfa;
-    --accent: #4ade80;
+    --bg: #f5f5f3;
+    --bg2: #ffffff;
+    --bg3: #f0f0ee;
+    --bg4: #e8e8e5;
+    --border: #e0e0dc;
+    --border2: #c8c8c4;
+    --text: #1a1a18;
+    --text2: #505050;
+    --text3: #a0a09a;
+    --accent: #1a6aad;
+    --accent2: #3d8fd4;
+    --red: #c0383a;
+    --red-bg: #fbe8e8;
+    --red-border: #f0b8b8;
+    --orange: #c04a00;
+    --orange-bg: #fceee3;
+    --orange-border: #f5c8a0;
+    --yellow: #7a6000;
+    --yellow-bg: #fdf3c8;
+    --yellow-border: #e8d060;
+    --green: #1a6e3a;
+    --green-bg: #dff5e8;
+    --green-border: #80d0a0;
+    --blue: #0b4fad;
+    --blue-bg: #ddeeff;
+    --blue-border: #90bff5;
+    --purple: #4a2d9e;
+    --purple-bg: #ede8ff;
+    --purple-border: #b8a0f0;
+    --radius: 4px;
+    --radius2: 6px;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
-  html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    font-size: 13px;
+  }
 
-  .app {
-    max-width: 420px;
-    margin: 0 auto;
-    min-height: 100vh;
+  /* SIDEBAR */
+  .sidebar {
+    width: 220px;
+    min-width: 220px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
-    padding-bottom: 80px;
+    height: 100vh;
   }
-
-  header {
-    padding: 20px 20px 12px;
+  .sidebar-header {
+    padding: 20px 16px 16px;
     border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
   }
-  .logo { font-size: 13px; font-weight: 500; color: var(--text2); letter-spacing: .08em; text-transform: uppercase; }
-  .logo span { color: var(--accent); }
-  .date-badge { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text3); }
-
-  .main { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
-
-  .timer-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    transition: border-color .3s;
-  }
-  .timer-card.running { border-color: var(--green-dim); background: var(--green-bg); }
-  .timer-card.paused { border-color: #92400e; background: var(--amber-bg); }
-
-  .status-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
-  .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--text3); }
-  .status-dot.running { background: var(--green); animation: pulse 2s infinite; }
-  .status-dot.paused { background: var(--amber); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-  .status-text { font-size: 12px; font-weight: 500; color: var(--text2); text-transform: uppercase; letter-spacing: .08em; }
-  .status-text.running { color: var(--green); }
-  .status-text.paused { color: var(--amber); }
-
-  .timer-display {
-    font-family: 'DM Mono', monospace;
-    font-size: 48px;
-    font-weight: 400;
-    color: var(--text);
-    letter-spacing: -.02em;
-    line-height: 1;
-    margin-bottom: 8px;
-  }
-  .timer-display.running { color: var(--green); }
-  .timer-display.paused { color: var(--amber); }
-
-  .timer-meta { font-size: 13px; color: var(--text2); }
-  .timer-meta span { color: var(--text); }
-
-  .form-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 16px;
-  }
-  .form-label { font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; margin-bottom: 8px; font-weight: 500; }
-  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-  .form-grid.full { grid-template-columns: 1fr; }
-
-  select, input {
-    width: 100%;
-    background: var(--surface2);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    color: var(--text);
-    font-family: 'DM Sans', sans-serif;
-    font-size: 13px;
-    padding: 10px 12px;
-    outline: none;
-    appearance: none;
-    -webkit-appearance: none;
-    cursor: pointer;
-  }
-  select:focus, input:focus { border-color: var(--accent); }
-
-  .person-select {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    margin-bottom: 12px;
-  }
-  .person-chip {
-    padding: 6px 12px;
-    border-radius: 20px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
-    font-size: 12px;
-    color: var(--text2);
-    cursor: pointer;
-    transition: all .15s;
-    white-space: nowrap;
-  }
-  .person-chip.active {
-    border-color: var(--accent);
-    background: var(--green-bg);
-    color: var(--green);
-  }
-
-  .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  .btn-full { grid-column: 1 / -1; }
-
-  .btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    padding: 16px;
-    border-radius: 12px;
-    border: none;
-    font-family: 'DM Sans', sans-serif;
+  .sidebar-logo {
+    font-family: 'IBM Plex Mono', monospace;
     font-size: 15px;
     font-weight: 500;
-    cursor: pointer;
-    transition: all .15s;
-    letter-spacing: -.01em;
+    color: var(--accent);
+    letter-spacing: 0.05em;
   }
-  .btn:active { transform: scale(.97); }
-  .btn svg { width: 20px; height: 20px; stroke-width: 2; }
-
-  .btn-start { background: var(--green); color: #052e16; }
-  .btn-pause { background: var(--amber); color: #1c1000; }
-  .btn-resume { background: var(--blue); color: var(--blue-bg); }
-  .btn-stop { background: var(--red); color: #1c0000; }
-  .btn-new { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
-  .btn-disabled { background: var(--surface2); color: var(--text3); border: 1px solid var(--border); cursor: not-allowed; }
-
-  .entries-card {
-    background: var(--surface);
+  .sidebar-sub {
+    font-size: 11px;
+    color: var(--text3);
+    margin-top: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .sidebar-section {
+    padding: 16px 12px 8px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--text3);
+    font-weight: 500;
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 16px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    border-left: 2px solid transparent;
+    font-size: 13px;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--text); }
+  .nav-item.active {
+    background: var(--bg3);
+    color: var(--accent);
+    border-left-color: var(--accent);
+  }
+  .nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+  .nav-badge {
+    margin-left: auto;
+    background: var(--bg4);
+    color: var(--text3);
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 6px;
+    border-radius: 3px;
     border: 1px solid var(--border);
-    border-radius: 16px;
+  }
+  .nav-item.active .nav-badge { background: var(--accent2); color: var(--bg); border-color: var(--accent); }
+  .sidebar-bottom {
+    margin-top: auto;
+    border-top: 1px solid var(--border);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: var(--accent2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; color: var(--bg);
+    font-family: 'IBM Plex Mono', monospace;
+    flex-shrink: 0;
+  }
+  .avatar-name { font-size: 12px; color: var(--text); }
+  .avatar-role { font-size: 10px; color: var(--text3); }
+
+  /* MAIN */
+  .main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
   }
-  .entries-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text3); text-transform: uppercase; letter-spacing: .08em; font-weight: 500; }
-  .entry {
+
+  /* TOPBAR */
+  .topbar {
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--bg2);
+  }
+  .topbar-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    flex: 1;
+  }
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: var(--radius);
+    font-size: 12px;
+    font-family: 'IBM Plex Sans', sans-serif;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text2);
+  }
+  .btn:hover { background: var(--bg4); color: var(--text); border-color: var(--border2); }
+  .btn svg { width: 14px; height: 14px; }
+  .btn-primary {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .btn-primary:hover { background: #2279c0; border-color: #2279c0; }
+
+  /* METRICS */
+  .metrics {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  .metric {
+    background: var(--bg2);
+    padding: 16px 20px;
+  }
+  .metric-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .metric-value {
+    font-size: 26px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .metric-value.alert { color: var(--red); }
+  .metric-value.good { color: var(--green); }
+  .metric-value.info { color: var(--accent); }
+  .metric-sub { font-size: 11px; color: var(--text3); }
+
+  /* FILTERS */
+  .filters {
+    padding: 10px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-wrap: wrap;
+  }
+  .filter-label {
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-family: 'IBM Plex Mono', monospace;
+    margin-right: 2px;
+  }
+  .filter-chip {
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    font-size: 11px;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text2);
+    font-family: 'IBM Plex Sans', sans-serif;
+    transition: all 0.12s;
+  }
+  .filter-chip:hover { border-color: var(--border2); color: var(--text); }
+  .filter-chip.active {
+    background: var(--accent);
+    color: var(--bg);
+    border-color: var(--accent);
+    font-weight: 500;
+  }
+  .filter-sep { width: 1px; height: 20px; background: var(--border); margin: 0 4px; }
+  .filter-select {
+    padding: 4px 10px;
+    border-radius: var(--radius);
+    font-size: 11px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text2);
+    font-family: 'IBM Plex Sans', sans-serif;
+    cursor: pointer;
+  }
+  .filter-select:focus { outline: none; border-color: var(--border2); }
+  .view-toggle { margin-left: auto; display: flex; gap: 4px; }
+  .view-btn {
+    padding: 5px 8px;
+    border-radius: var(--radius);
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text3);
+    transition: all 0.12s;
+  }
+  .view-btn:hover { color: var(--text2); border-color: var(--border2); }
+  .view-btn.active { background: var(--bg3); color: var(--accent); border-color: var(--border2); }
+  .view-btn svg { width: 14px; height: 14px; display: block; }
+
+  /* KANBAN BOARD */
+  .board-wrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 16px 24px 24px;
+    background: var(--bg);
+  }
+  .board {
+    display: flex;
+    gap: 12px;
+    height: 100%;
+    min-width: max-content;
+  }
+  .column {
+    width: 280px;
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .col-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 4px;
+  }
+  .col-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .col-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    color: var(--text2);
+    flex: 1;
+  }
+  .col-count {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 1px 7px;
+    border-radius: 3px;
+  }
+  .col-body {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+  }
+  .col-body::-webkit-scrollbar { width: 4px; }
+  .col-body::-webkit-scrollbar-track { background: transparent; }
+  .col-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  /* TICKET CARD */
+  .ticket {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    position: relative;
+  }
+  .ticket:hover { border-color: var(--border2); background: var(--bg3); transform: translateY(-1px); }
+  .ticket-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--border);
-    gap: 10px;
+    margin-bottom: 8px;
   }
-  .entry:last-child { border-bottom: none; }
-  .entry-left { flex: 1; min-width: 0; }
-  .entry-tag { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 6px; display: inline-block; margin-bottom: 3px; }
-  .tag-montage { background: #052e16; color: var(--green); }
-  .tag-fahrzeit { background: #0a1628; color: var(--blue); }
-  .tag-buro { background: #1a0a2e; color: var(--purple); }
-  .tag-other { background: var(--surface2); color: var(--text2); }
-  .entry-project { font-size: 12px; color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .entry-right { text-align: right; flex-shrink: 0; }
-  .entry-time { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); }
-  .entry-dur { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text2); margin-top: 2px; }
-  .entry-dur.active { color: var(--green); }
-
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 16px;
-    font-size: 13px; color: var(--text);
-    opacity: 0; transition: opacity .3s; pointer-events: none;
-    white-space: nowrap; z-index: 100;
+  .ticket-project {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
   }
-  .toast.show { opacity: 1; }
-  .toast.success { border-color: var(--green-dim); color: var(--green); }
-  .toast.error { border-color: #7f1d1d; color: var(--red); }
-
-  .tab-bar {
-    position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
-    width: 100%; max-width: 420px;
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    display: grid; grid-template-columns: repeat(3, 1fr);
-    z-index: 50;
+  .ticket-id {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
   }
-  .tab { padding: 12px 0 10px; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; color: var(--text3); cursor: pointer; }
-  .tab.active { color: var(--accent); }
-  .tab svg { width: 22px; height: 22px; stroke-width: 1.5; }
+  .ticket-title {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    line-height: 1.45;
+    margin-bottom: 14px;
+  }
+  .ticket-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .priority-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .priority-badge .dot { width: 6px; height: 6px; border-radius: 50%; }
+  .p-critical { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .p-high { background: var(--orange-bg); color: var(--orange); border: 1px solid var(--orange-border); }
+  .p-medium { background: var(--yellow-bg); color: var(--yellow); border: 1px solid var(--yellow-border); }
+  .p-low { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .assignee-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px; height: 22px;
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 600;
+    font-family: 'IBM Plex Mono', monospace;
+    border: 1px solid var(--border);
+    margin-left: auto;
+  }
+  .deadline-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .deadline-chip.urgent { color: var(--red); border-color: var(--red-border); background: var(--red-bg); }
+  .deadline-chip svg { width: 10px; height: 10px; }
+  .blocked-tag {
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--red);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--red-border);
+    background: var(--red-bg);
+  }
 
-  .loading-overlay {
+  /* ADD TICKET BUTTON */
+  .add-ticket-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 4px;
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: var(--radius);
+    font-size: 12px;
+    transition: all 0.12s;
+    border: 1px dashed transparent;
+  }
+  .add-ticket-btn:hover { color: var(--text2); border-color: var(--border); background: var(--bg3); padding: 8px; }
+  .add-ticket-btn svg { width: 14px; height: 14px; }
+
+  /* MODAL OVERLAY */
+  .modal-overlay {
+    display: none;
     position: fixed; inset: 0;
-    background: rgba(0,0,0,.6);
-    display: flex; align-items: center; justify-content: center;
-    z-index: 200; opacity: 0; pointer-events: none; transition: opacity .2s;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
   }
-  .loading-overlay.show { opacity: 1; pointer-events: all; }
-  .spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius2);
+    width: 560px;
+    max-width: 95vw;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 24px;
+  }
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .modal-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+  .modal-close {
+    width: 28px; height: 28px;
+    border-radius: var(--radius);
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text2);
+    transition: all 0.12s;
+  }
+  .modal-close:hover { background: var(--bg4); color: var(--text); }
+  .modal-close svg { width: 14px; height: 14px; }
+  .form-row { margin-bottom: 16px; }
+  .form-label {
+    display: block;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    margin-bottom: 8px;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: var(--radius);
+    padding: 8px 12px;
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    transition: border-color 0.12s;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+  .form-textarea { resize: vertical; min-height: 80px; }
+  .form-select option { background: var(--bg3); }
+  .form-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer {
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* TICKET DETAIL */
+  .detail-field {
+    display: flex;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    align-items: flex-start;
+  }
+  .detail-field:last-child { border-bottom: none; }
+  .detail-key {
+    width: 100px;
+    min-width: 100px;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding-top: 1px;
+  }
+  .detail-val { font-size: 13px; color: var(--text); flex: 1; }
+  .detail-description {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.6;
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+
+  /* NOTION SYNC INDICATOR */
+  .sync-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 24px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    font-size: 11px;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .sync-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* TABLE VIEW */
+  .table-wrapper { flex: 1; overflow: auto; padding: 16px 24px; }
+  .tickets-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .tickets-table th {
+    text-align: left;
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text3);
+    font-family: 'IBM Plex Mono', monospace;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    font-weight: 500;
+  }
+  .tickets-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text2);
+    vertical-align: middle;
+  }
+  .tickets-table tr:hover td { background: var(--bg2); cursor: pointer; }
+  .tickets-table tr:hover td:first-child { color: var(--accent); }
+  .status-pill {
+    display: inline-block;
+    font-size: 10px;
+    font-family: 'IBM Plex Mono', monospace;
+    padding: 2px 8px;
+    border-radius: 3px;
+    font-weight: 500;
+  }
+  .s-pending { background: var(--bg4); color: var(--text2); border: 1px solid var(--border2); }
+  .s-inprogress { background: var(--blue-bg); color: var(--blue); border: 1px solid var(--blue-border); }
+  .s-blocked { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .s-done { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .s-delivered { background: var(--purple-bg); color: var(--purple); border: 1px solid var(--purple-border); }
+
+  .hidden { display: none !important; }
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--bg3);
+    border: 1px solid var(--green-border);
+    color: var(--green);
+    padding: 10px 16px;
+    border-radius: var(--radius2);
+    font-size: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    z-index: 200;
+    transform: translateY(20px);
+    opacity: 0;
+    transition: all 0.25s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* Loading */
+  .loading-spinner {
+    display: inline-block;
+    width: 14px; height: 14px;
+    border: 2px solid var(--border2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    vertical-align: middle;
+  }
   @keyframes spin { to { transform: rotate(360deg); } }
+
+  .n8n-status {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    color: var(--text3);
+  }
+  .n8n-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--yellow); }
+  .n8n-dot.connected { background: var(--green); }
+  .n8n-dot.error { background: var(--red); }
+
+  /* ── MOBILE RESPONSIVE ─────────────────────────────── */
+  @media (max-width: 768px) {
+    body { flex-direction: column; height: 100dvh; overflow: hidden; }
+    .sidebar { position: fixed; top: 0; left: 0; width: 80vw; max-width: 300px; height: 100dvh; z-index: 300; transform: translateX(-100%); transition: transform 0.25s cubic-bezier(0.4,0,0.2,1); }
+    .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.18); }
+    .sidebar-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 299; }
+    .sidebar-overlay.open { display: block; }
+    .topbar { padding: 0 12px; height: 52px; gap: 8px; flex-shrink: 0; }
+    .topbar-title { font-size: 12px; }
+    .n8n-status { display: none; }
+    .topbar .btn:not(.btn-primary):not(#mob-sync-btn) { display: none; }
+    .topbar .btn-primary { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+    .mob-hamburger { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; min-width: 36px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; flex-shrink: 0; }
+    .mob-hamburger svg { width: 18px; height: 18px; color: var(--text2); }
+    #mob-sync-btn { display: inline-flex !important; padding: 5px 10px; font-size: 11px; white-space: nowrap; }
+    .sync-bar { padding: 4px 12px; font-size: 10px; overflow-x: auto; overflow-y: hidden; white-space: nowrap; flex-shrink: 0; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .sync-bar::-webkit-scrollbar { display: none; }
+    .metrics { grid-template-columns: repeat(2, 1fr); flex-shrink: 0; }
+    .metric { padding: 10px 14px; }
+    .metric-value { font-size: 22px; }
+    .metric-label { font-size: 10px; margin-bottom: 4px; }
+    .metric-sub { font-size: 10px; }
+    .filters { padding: 8px 12px; flex-wrap: nowrap; overflow-x: auto; gap: 6px; -webkit-overflow-scrolling: touch; scrollbar-width: none; flex-shrink: 0; }
+    .filters::-webkit-scrollbar { display: none; }
+    .filter-sep { display: none; }
+    .view-toggle { margin-left: 0; flex-shrink: 0; }
+    .filter-select { font-size: 12px; padding: 4px 8px; max-width: 130px; }
+    .filter-label { white-space: nowrap; flex-shrink: 0; }
+    .main { overflow: hidden; height: 100%; }
+    .board-wrapper { overflow-x: hidden; overflow-y: auto; padding: 12px 12px 80px; -webkit-overflow-scrolling: touch; }
+    .board { flex-direction: column; min-width: unset; height: auto; gap: 0; }
+    .column { width: 100%; min-width: unset; max-height: none; }
+    .col-body { overflow-y: visible; max-height: none; }
+    .col-header { cursor: pointer; padding: 10px 4px; }
+    .col-header::after { content: "\25BE"; margin-left: auto; font-size: 12px; color: var(--text3); transition: transform 0.2s; }
+    .column.collapsed .col-header::after { transform: rotate(-90deg); }
+    .column.collapsed .col-body, .column.collapsed .add-ticket-btn { display: none; }
+    .ticket { padding: 14px; }
+    .ticket-title { font-size: 14px; margin-bottom: 10px; }
+    .table-wrapper { padding: 0 0 80px; }
+    .tickets-table th:nth-child(3), .tickets-table td:nth-child(3),
+    .tickets-table th:nth-child(4), .tickets-table td:nth-child(4) { display: none; }
+    .modal-overlay { align-items: flex-end; padding: 0; }
+    .modal { width: 100vw; max-width: 100vw; max-height: 92dvh; overflow-y: auto; border-radius: 16px 16px 0 0; border-left: none; border-right: none; border-bottom: none; padding: 20px 16px 32px; }
+    .modal-header { margin-bottom: 16px; }
+    #detail-modal .modal { max-height: 95dvh; overflow-y: auto; }
+    #detail-modal .modal-header > div { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    #detail-modal .modal-header .btn { padding: 6px 10px; font-size: 11px; }
+    .form-row-2 { grid-template-columns: 1fr; gap: 0; }
+    .form-input, .form-select, .form-textarea { font-size: 16px; padding: 10px 12px; }
+    .modal-footer { flex-direction: column-reverse; gap: 8px; }
+    .modal-footer .btn { width: 100%; justify-content: center; padding: 12px; font-size: 14px; }
+    .detail-key { min-width: 76px; width: 76px; font-size: 10px; }
+    .detail-field { padding: 8px 0; }
+    #settings-modal .modal { max-height: 95dvh; overflow-y: auto; }
+    #view-team, #view-projects, #view-summary, #view-alerts, #view-calendar { padding: 14px 12px 80px !important; overflow-y: auto; }
+    .toast { bottom: 72px; right: 12px; left: 12px; text-align: center; font-size: 12px; }
+    .mob-bottom-nav { display: flex; position: fixed; bottom: 0; left: 0; right: 0; height: 60px; background: var(--bg2); border-top: 1px solid var(--border); z-index: 200; padding-bottom: env(safe-area-inset-bottom); }
+    .mob-nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; cursor: pointer; color: var(--text3); font-size: 10px; font-family: "IBM Plex Mono", monospace; transition: color 0.15s; -webkit-tap-highlight-color: transparent; position: relative; }
+    .mob-nav-item.active { color: var(--accent); }
+    .mob-nav-item svg { width: 20px; height: 20px; }
+    .mob-nav-badge { position: absolute; top: 6px; background: var(--accent); color: var(--bg2); font-size: 9px; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; padding: 0 4px; font-family: "IBM Plex Mono", monospace; }
+  }
+  @media (min-width: 769px) {
+    .mob-hamburger { display: none; }
+    .mob-bottom-nav { display: none; }
+    .sidebar-overlay { display: none !important; }
+    #mob-sync-btn { display: none !important; }
+  }
 </style>
 </head>
 <body>
 
-<div class="app">
-  <header>
-    <div class="logo">Gross<span>ELAN</span> &middot; Time Tracker</div>
-    <div class="date-badge" id="header-date"></div>
-  </header>
+<!-- SIDEBAR -->
+<div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
 
-  <div class="main">
-    <div class="timer-card" id="timer-card">
-      <div class="status-row">
-        <div class="status-dot" id="status-dot"></div>
-        <div class="status-text" id="status-text">Idle</div>
-      </div>
-      <div class="timer-display" id="timer-display">00:00:00</div>
-      <div class="timer-meta" id="timer-meta">Select a project and check in</div>
+<!-- SIDEBAR -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div class="sidebar-logo">GrossELAN</div>
+    <div class="sidebar-sub">Operations · Tickets</div>
+  </div>
+  <div class="sidebar-section">Main</div>
+  <div class="nav-item active" onclick="setView('kanban')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="3" width="4" height="10" rx="1"/><rect x="6" y="3" width="4" height="7" rx="1"/><rect x="11" y="3" width="4" height="9" rx="1"/>
+    </svg>
+    Tickets
+    <span class="nav-badge" id="nb-tickets">0</span>
+  </div>
+  <div class="nav-item" onclick="setView('projects')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="1" width="14" height="14" rx="2"/><path d="M1 5h14M5 5v10"/>
+    </svg>
+    Projects
+  </div>
+  <div class="nav-item" onclick="setView('team')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5h2M10 12l2 2 3-3"/>
+    </svg>
+    Team
+  </div>
+  <div class="nav-item" onclick="setView('calendar')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="2" width="14" height="13" rx="2"/><path d="M1 6h14M5 1v3M11 1v3"/>
+    </svg>
+    Calendar
+  </div>
+  <div class="nav-item" onclick="setView('time')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l2.5 2.5"/>
+    </svg>
+    Time Tracker
+  </div>
+  <div class="sidebar-section">Views</div>
+  <div class="nav-item" onclick="setView('summary')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <rect x="1" y="9" width="3" height="6" rx="1"/><rect x="6" y="5" width="3" height="10" rx="1"/><rect x="11" y="2" width="3" height="13" rx="1"/>
+    </svg>
+    Summary
+  </div>
+  <div class="nav-item" onclick="setView('alerts')">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M8 1a5 5 0 015 5c0 3 1 4 1 5H2c0-1 1-2 1-5a5 5 0 015-5zM6 14a2 2 0 004 0"/>
+    </svg>
+    Alerts
+  </div>
+  <div class="sidebar-section" id="settings-section" style="display:none">Settings</div>
+  <div class="nav-item" id="settings-nav" onclick="openSettings()" style="display:none">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+      <circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.5 1.5M11.5 11.5L13 13M3 13l1.5-1.5M11.5 4.5L13 3"/>
+    </svg>
+    Settings
+  </div>
+  <div class="sidebar-bottom">
+    <div class="avatar" id="user-avatar">GL</div>
+    <div>
+      <div class="avatar-name" id="user-name">Gerard La Mata</div>
+      <div class="avatar-role" id="user-role">Project Manager</div>
     </div>
+  </div>
+</aside>
 
-    <div class="form-card">
-      <div class="form-label">Who is clocking in?</div>
-      <div class="person-select" id="person-select">
-        <div class="person-chip active" data-person="Gerard La Mata" onclick="selectPerson(this)">Gerard</div>
-        <div class="person-chip" data-person="Ryszard Pawlik" onclick="selectPerson(this)">Ryszard</div>
-        <div class="person-chip" data-person="Dan Chitu" onclick="selectPerson(this)">Dan</div>
-        <div class="person-chip" data-person="Mihai Andrei" onclick="selectPerson(this)">Mihai</div>
-        <div class="person-chip" data-person="Luftrim Musay" onclick="selectPerson(this)">Luftrim</div>
-        <div class="person-chip" data-person="Silviu Oprin" onclick="selectPerson(this)">Silviu</div>
-        <div class="person-chip" data-person="Robert Nica" onclick="selectPerson(this)">Robert</div>
-        <div class="person-chip" data-person="Tobias Hoppe" onclick="selectPerson(this)">Tobias</div>
-        <div class="person-chip" data-person="Razvan Chiaga" onclick="selectPerson(this)">Razvan</div>
+<!-- MAIN CONTENT -->
+<div class="main" id="main-content">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <button class="mob-hamburger" onclick="openSidebar()" aria-label="Menu"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 4h14M2 9h14M2 14h14"/></svg></button>
+    <span class="topbar-title">// ticket_board</span>
+    <div class="n8n-status">
+      <div class="n8n-dot" id="n8n-dot"></div>
+      <span id="n8n-status-text">N8N disconnected</span>
+    </div>
+    <button class="btn" onclick="syncFromNotion()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8a7 7 0 0012.5-3M15 8a7 7 0 01-12.5 3M13 5l2.5-0.5L13 2M3 11l-2.5.5L3 14"/></svg>
+      Sync Notion
+    </button>
+    <button class="btn" id="mob-sync-btn" onclick="syncFromNotion()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 8a7 7 0 0012.5-3M15 8a7 7 0 01-12.5 3M13 5l2.5-0.5L13 2M3 11l-2.5.5L3 14"/></svg>
+      Sync
+    </button>
+    <button class="btn" onclick="exportCSV()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 12h10M8 2v8M5 7l3 3 3-3"/></svg>
+      Export
+    </button>
+    <button class="btn btn-primary" onclick="openNewTicket()">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2v12M2 8h12"/></svg>
+      New ticket
+    </button>
+  </div>
+
+  <!-- SYNC BAR -->
+  <div class="sync-bar">
+    <div class="sync-dot" id="sync-dot"></div>
+    <span id="sync-text">Configure N8N webhook URL in Settings to enable Notion sync</span>
+  </div>
+
+  <!-- METRICS -->
+  <div class="metrics">
+    <div class="metric">
+      <div class="metric-label">Active tickets</div>
+      <div class="metric-value" id="m-active">0</div>
+      <div class="metric-sub" id="m-active-sub">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Critical / High</div>
+      <div class="metric-value alert" id="m-critical">0</div>
+      <div class="metric-sub">Require attention</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Delivered this month</div>
+      <div class="metric-value good" id="m-delivered">0</div>
+      <div class="metric-sub" id="m-delivered-sub">—</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Open projects</div>
+      <div class="metric-value info" id="m-projects">0</div>
+      <div class="metric-sub" id="m-proj-sub">—</div>
+    </div>
+  </div>
+
+  <!-- FILTERS + VIEW TOGGLE -->
+  <div class="filters" id="filter-bar">
+    <span class="filter-label">Project:</span>
+    <select class="filter-select" id="project-filter" onchange="setProject(this.value)" style="min-width:160px">
+      <option value="all">All projects</option>
+    </select>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Assigned:</span>
+    <select class="filter-select" id="assignee-filter" onchange="applyFilters()">
+      <option value="all">All</option>
+    </select>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Priority:</span>
+    <select class="filter-select" id="priority-filter" onchange="applyFilters()">
+      <option value="all">All</option>
+      <option value="Critical">Critical</option>
+      <option value="High">High</option>
+      <option value="Medium">Medium</option>
+      <option value="Low">Low</option>
+    </select>
+    <div class="filter-sep"></div>
+    <span class="filter-label">Status:</span>
+    <select class="filter-select" id="status-filter" onchange="applyFilters()">
+      <option value="all">All</option>
+      <option value="Pending">Pending</option>
+      <option value="In progress">In progress</option>
+      <option value="Blocked">Blocked</option>
+      <option value="Done">Done</option>
+      <option value="Delivered">Delivered</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="vb-kanban" onclick="switchView('kanban')" title="Kanban">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="2" width="3" height="10" rx="1"/><rect x="5.5" y="2" width="3" height="7" rx="1"/><rect x="10" y="2" width="3" height="9" rx="1"/></svg>
+      </button>
+      <button class="view-btn" id="vb-table" onclick="switchView('table')" title="Table">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M1 3h12M1 7h12M1 11h12M5 3v8M9 3v8"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- KANBAN VIEW -->
+  <div class="board-wrapper" id="view-kanban">
+    <div class="board" id="kanban-board"></div>
+  </div>
+
+  <!-- TABLE VIEW -->
+  <div class="table-wrapper hidden" id="view-table">
+    <table class="tickets-table">
+      <thead>
+        <tr>
+          <th>ID</th><th>Title</th><th>Project</th><th>Assigned</th>
+          <th>Priority</th><th>Status</th><th>Deadline</th>
+        </tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+  <!-- TEAM VIEW -->
+  <div class="hidden" id="view-team" style="flex:1;overflow-y:auto;padding:24px">
+    <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:monospace;font-size:13px;color:var(--text2);font-weight:500">// team_directory</span>
+      <span style="font-size:11px;color:var(--text3);font-family:monospace" id="team-count"></span>
+    </div>
+    <div id="team-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px"></div>
+  </div>
+
+  <!-- PROJECTS VIEW -->
+  <div class="hidden" id="view-projects" style="flex:1;overflow-y:auto;padding:24px">
+    <div style="margin-bottom:20px;display:flex;align-items:center;justify-content:space-between">
+      <span style="font-family:monospace;font-size:13px;color:var(--text2);font-weight:500">// active_projects</span>
+      <span style="font-size:11px;color:var(--text3);font-family:monospace" id="projects-count"></span>
+    </div>
+    <div id="projects-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px"></div>
+  </div>
+
+  <!-- SUMMARY VIEW -->
+  <div class="hidden" id="view-summary" style="flex:1;overflow-y:auto;padding:24px">
+    <div style="margin-bottom:20px">
+      <span style="font-family:monospace;font-size:13px;color:var(--text2);font-weight:500">// operations_summary</span>
+    </div>
+    <div id="summary-content"></div>
+  </div>
+
+  <!-- ALERTS VIEW -->
+  <div class="hidden" id="view-alerts" style="flex:1;overflow-y:auto;padding:24px">
+    <div style="margin-bottom:20px">
+      <span style="font-family:monospace;font-size:13px;color:var(--text2);font-weight:500">// alerts</span>
+    </div>
+    <div id="alerts-content"></div>
+  </div>
+
+  <!-- CALENDAR VIEW -->
+  <div class="hidden" id="view-calendar" style="flex:1;overflow-y:auto;padding:24px">
+    <div style="margin-bottom:20px;display:flex;align-items:center;gap:12px">
+      <span style="font-family:monospace;font-size:13px;color:var(--text2);font-weight:500">// deadline_calendar</span>
+      <button class="btn" id="cal-prev" onclick="calNav(-1)">&#8592;</button>
+      <span style="font-family:monospace;font-size:13px;color:var(--text);font-weight:500" id="cal-title"></span>
+      <button class="btn" id="cal-next" onclick="calNav(1)">&#8594;</button>
+    </div>
+    <div id="calendar-grid"></div>
+  </div>
+</div>
+
+  <!-- TIME TRACKER VIEW -->
+  <div class="hidden" id="view-time" style="flex:1;overflow-y:auto;padding:0">
+    <div id="time-tracker-root"></div>
+  </div>
+
+<!-- NEW / EDIT TICKET MODAL -->
+<div class="modal-overlay" id="ticket-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-title">// new_ticket</span>
+      <div class="modal-close" onclick="closeModal('ticket-modal')">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2L2 12"/></svg>
       </div>
-
-      <div class="form-label">Project &amp; activity</div>
-      <div class="form-grid">
-        <select id="project-select">
-          <option value="Allgemein 2026">Allgemein 2026</option>
-          <option value="AV Albtal BA2">AV Albtal BA2</option>
-          <option value="Büro">Büro</option>
-          <option value="Elektrotechnische Sanierung RÜB Fischweier">Fischweier RÜB</option>
-          <option value="KFP – MSE Filterpresse">KFP – MSE</option>
-          <option value="Schwäbisch Hall / HST">Schwäbisch Hall</option>
-          <option value="KA Neurod">KA Neurod</option>
-          <option value="KA Reutlingen">KA Reutlingen</option>
-          <option value="KA Waiblingen">KA Waiblingen</option>
-          <option value="KA Steinenbronn">KA Steinenbronn</option>
-          <option value="KA Strudelbach">KA Strudelbach</option>
-        </select>
-        <select id="tag-select">
-          <option value="501 Montage">501 Montage</option>
-          <option value="900 Fahrzeit">900 Fahrzeit</option>
-          <option value="750 Büro">750 Büro</option>
-          <option value="104 Baubesprechung – Ing. Büro">104 Baubesprechung</option>
-          <option value="101 CAD">101 CAD</option>
-          <option value="201 SPS">201 SPS</option>
-          <option value="301 PLS">301 PLS</option>
-          <option value="401 Werkstatt">401 Werkstatt</option>
-          <option value="601 Rapport">601 Rapport</option>
-          <option value="701 Urlaub">701 Urlaub</option>
-          <option value="702 Krankheit">702 Krankheit</option>
-          <option value="703 Zeitausgleich">703 Zeitausgleich</option>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Title *</label>
+      <input class="form-input" id="f-title" placeholder="Describe the task clearly..." />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Description</label>
+      <textarea class="form-textarea" id="f-description" placeholder="Additional details, context, blockers..."></textarea>
+    </div>
+    <div class="form-row-2">
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Project</label>
+        <select class="form-select" id="f-project">
+          <option value="">— select —</option>
         </select>
       </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Assigned to</label>
+        <select class="form-select" id="f-assigned" multiple style="height:90px;padding:4px">
+        </select>
+        <div style="font-size:10px;color:var(--text3);margin-top:3px">Ctrl+click to select multiple</div>
+      </div>
+    </div>
+    <div class="form-row-2" style="margin-top:16px">
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Priority</label>
+        <select class="form-select" id="f-priority">
+          <option>Critical</option><option>High</option>
+          <option selected>Medium</option><option>Low</option>
+        </select>
+      </div>
+      <div class="form-row" style="margin-bottom:0">
+        <label class="form-label">Status</label>
+        <select class="form-select" id="f-status">
+          <option>Pending</option><option>In progress</option>
+          <option>Blocked</option><option>Done</option><option>Delivered</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:16px">
+      <label class="form-label">Deadline</label>
+      <input class="form-input" id="f-deadline" type="date" />
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('ticket-modal')">Cancel</button>
+      <button class="btn btn-primary" id="save-btn" onclick="saveTicket()">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 7l4 4 6-6"/></svg>
+        Save ticket
+      </button>
+    </div>
+  </div>
+</div>
 
-      <div class="btn-grid" id="btn-grid">
-        <button class="btn btn-start btn-full" onclick="doCheckin()">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>
-          Check in
+<!-- TICKET DETAIL MODAL -->
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal" style="width:580px">
+    <div class="modal-header">
+      <span class="modal-title" id="detail-modal-title">// ticket_detail</span>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn" id="edit-ticket-btn" onclick="editCurrentTicket()">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 2l3 3-7 7H2v-3z"/></svg>
+          Edit
         </button>
-      </div>
-    </div>
-
-    <div class="entries-card">
-      <div class="entries-header">Today's entries</div>
-      <div id="entries-list">
-        <div class="entry" style="justify-content:center;padding:20px">
-          <span style="font-size:13px;color:var(--text3)">No entries yet today</span>
+        <button class="btn" id="delete-ticket-btn" onclick="deleteCurrentTicket()" style="color:var(--red);border-color:var(--red-border)">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 3h10M5 3V2h4v1M6 6v4M8 6v4M3 3l1 9h6l1-9"/></svg>
+          Delete
+        </button>
+        <div class="modal-close" onclick="closeModal('detail-modal')">
+          <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2L2 12"/></svg>
         </div>
       </div>
     </div>
+    <div id="detail-content"></div>
   </div>
 </div>
 
-<div class="tab-bar">
-  <div class="tab active">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
-    Clock
-  </div>
-  <div class="tab">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-    History
-  </div>
-  <div class="tab">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
-    Summary
+<!-- SETTINGS MODAL -->
+<div class="modal-overlay" id="settings-modal">
+  <div class="modal" style="width:480px">
+    <div class="modal-header">
+      <span class="modal-title">// settings</span>
+      <div class="modal-close" onclick="closeModal('settings-modal')">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 2l10 10M12 2L2 12"/></svg>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">N8N Webhook URL (create ticket)</label>
+      <input class="form-input" id="s-webhook-create" placeholder="https://your-n8n.com/webhook/tickets-create" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">N8N Webhook URL (update ticket)</label>
+      <input class="form-input" id="s-webhook-update" placeholder="https://your-n8n.com/webhook/tickets-update" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">N8N Webhook URL (get all tickets)</label>
+      <input class="form-input" id="s-webhook-get" placeholder="https://your-n8n.com/webhook/tickets-get" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">N8N Webhook URL (delete ticket)</label>
+      <input class="form-input" id="s-webhook-delete" placeholder="https://your-n8n.com/webhook/tickets-delete" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">N8N Webhook URL (notifications)</label>
+      <input class="form-input" id="s-webhook-notify" placeholder="https://your-n8n.com/webhook/tickets-notify" />
+    </div>
+    <div class="form-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
+      <label class="form-label">Your name (shown in sidebar)</label>
+      <input class="form-input" id="s-username" placeholder="Your name" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Your initials (avatar)</label>
+      <input class="form-input" id="s-initials" placeholder="GL" maxlength="3" style="max-width:80px" />
+    </div>
+    <div class="form-row" style="margin-top:20px;border-top:1px solid var(--border);padding-top:20px">
+      <label class="form-label">Team members (one per line: Name,Initials,Role)</label>
+      <textarea class="form-textarea" id="s-team" placeholder="Gerard La Mata,GL,Project Manager&#10;Martin Wellner,MW,Project Manager"></textarea>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Projects (one per line)</label>
+      <textarea class="form-textarea" id="s-projects" placeholder="RÜB Fischweier&#10;Ettlingen Nord&#10;Karlsruhe Mitte"></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal('settings-modal')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveSettings()">Save settings</button>
+    </div>
   </div>
 </div>
+
+
+<!-- MOBILE BOTTOM NAV -->
+<nav class="mob-bottom-nav" id="mob-bottom-nav">
+  <div class="mob-nav-item active" id="mbn-tickets" onclick="setViewMob('kanban', this)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="3" width="4" height="10" rx="1"/><rect x="6" y="3" width="4" height="7" rx="1"/><rect x="11" y="3" width="4" height="9" rx="1"/></svg>
+    <span id="mbn-badge" class="mob-nav-badge" style="display:none">0</span>
+    Tickets
+  </div>
+  <div class="mob-nav-item" id="mbn-projects" onclick="setViewMob('projects', this)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="1" y="1" width="14" height="14" rx="2"/><path d="M1 5h14M5 5v10"/></svg>
+    Projects
+  </div>
+  <div class="mob-nav-item" id="mbn-team" onclick="setViewMob('team', this)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="5" r="3"/><path d="M1 14c0-3 2-5 5-5h2M10 12l2 2 3-3"/></svg>
+    Team
+  </div>
+  <div class="mob-nav-item" id="mbn-alerts" onclick="setViewMob('alerts', this)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 1a5 5 0 015 5c0 3 1 4 1 5H2c0-1 1-2 1-5a5 5 0 015-5zM6 14a2 2 0 004 0"/></svg>
+    Alerts
+  </div>
+  <div class="mob-nav-item" id="mbn-time" onclick="setViewMob('time', this)">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6.5"/><path d="M8 4v4l2.5 2.5"/></svg>
+    Time
+  </div>
+  <div class="mob-nav-item" id="mbn-more" onclick="openSidebar()">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="3" cy="8" r="1.2" fill="currentColor"/><circle cx="8" cy="8" r="1.2" fill="currentColor"/><circle cx="13" cy="8" r="1.2" fill="currentColor"/></svg>
+    More
+  </div>
+</nav>
 
 <div class="toast" id="toast"></div>
-<div class="loading-overlay" id="loading"><div class="spinner"></div></div>
 
 <script>
-const WEBHOOKS = {
-  checkin:  'https://primary-production-96473.up.railway.app/webhook/checkin',
-  pause:    'https://primary-production-96473.up.railway.app/webhook/pause',
-  resume:   'https://primary-production-96473.up.railway.app/webhook/resume',
-  checkout: 'https://primary-production-96473.up.railway.app/webhook/checkout'
+const STORE_KEY = 'grosselan_tickets_v1';
+const CFG_KEY = 'grosselan_config_v1';
+
+let tickets = [];
+let config = {
+  webhookCreate: 'https://primary-production-96473.up.railway.app/webhook/tickets-create',
+  webhookUpdate: 'https://primary-production-96473.up.railway.app/webhook/tickets-update',
+  webhookGet: 'https://primary-production-96473.up.railway.app/webhook/tickets-get',
+  webhookDelete: 'https://primary-production-96473.up.railway.app/webhook/tickets-delete',
+  webhookNotify: 'https://primary-production-96473.up.railway.app/webhook/tickets-notify',
+  username: 'Gerard La Mata', initials: 'GL', role: 'Project Manager', isAdmin: true,
+  team: [
+    { name: 'Gerard La Mata', initials: 'GL', role: 'Project Manager' },
+    { name: 'Martin Wellner', initials: 'MW', role: 'Project Manager' },
+    { name: 'Franz Benning', initials: 'FB', role: 'Managing Director' },
+    { name: 'Marc Kemmer', initials: 'MK', role: 'Executive Assistant' },
+    { name: 'Razvan Chiaga', initials: 'RC', role: 'CAD Flow Chief' },
+    { name: 'Silviu Oprin', initials: 'SO', role: 'Automation Technician' },
+    { name: 'Robert Nica', initials: 'RN', role: 'Automation Technician' },
+    { name: 'Tobias Hoppe', initials: 'TH', role: 'CAD Technician' },
+    { name: 'Dan Chitu', initials: 'DC', role: 'Field Technician' },
+    { name: 'Mihai Andrei', initials: 'MA', role: 'Field Technician' },
+    { name: 'Ryszard Pawlik', initials: 'RP', role: 'Field Technician' },
+    { name: 'Luftrim Musay', initials: 'LM', role: 'Field Technician' },
+    { name: 'Florentina Andrei', initials: 'FA', role: 'Warehouse & Facility' },
+    { name: 'Heide Kühfuß', initials: 'HK', role: 'Office & Warehouse' },
+    { name: 'Maren Hohnhorst', initials: 'MH', role: 'External Accounting' },
+  ],
+  projects: ['RÜB Fischweier', 'Ettlingen Nord', 'Karlsruhe Mitte', 'AV Albtal BA2']
 };
 
-let state = 'idle';
-let currentPerson = 'Gerard La Mata';
-let timerStart = null;
-let pauseStart = null;
-let totalPausedMs = 0;
-let timerInterval = null;
-let entries = [];
+let currentView = 'kanban';
+let activeProject = 'all';
+let editingId = null;
+let viewingId = null;
 
-function selectPerson(el) {
-  document.querySelectorAll('.person-chip').forEach(function(c) { c.classList.remove('active'); });
-  el.classList.add('active');
-  currentPerson = el.dataset.person;
+const STATUSES = ['Pending', 'In progress', 'Blocked', 'Done', 'Delivered'];
+const STATUS_COLORS = {
+  'Pending': '#888', 'In progress': '#5090d0',
+  'Blocked': '#e05252', 'Done': '#52a870', 'Delivered': '#8060c0'
+};
+const PRIORITY_ORDER = { Critical: 0, High: 1, Medium: 2, Low: 3 };
+
+// Hardcoded webhooks — never overridden by localStorage
+const WEBHOOKS = {
+  webhookCreate: 'https://primary-production-96473.up.railway.app/webhook/tickets-create',
+  webhookUpdate: 'https://primary-production-96473.up.railway.app/webhook/tickets-update',
+  webhookGet: 'https://primary-production-96473.up.railway.app/webhook/tickets-get',
+  webhookDelete: 'https://primary-production-96473.up.railway.app/webhook/tickets-delete',
+  webhookNotify: 'https://primary-production-96473.up.railway.app/webhook/tickets-notify',
+};
+
+function load() {
+  const raw = localStorage.getItem(STORE_KEY);
+  if (raw) tickets = JSON.parse(raw);
+  const cfg = localStorage.getItem(CFG_KEY);
+  if (cfg) config = { ...config, ...JSON.parse(cfg) };
+  // Always enforce hardcoded webhooks — no user can break them
+  Object.assign(config, WEBHOOKS);
 }
 
-function now() { return new Date().toISOString(); }
-function pad(n) { return String(Math.floor(n)).padStart(2, '0'); }
-function formatElapsed(ms) {
-  var s = Math.floor(ms / 1000);
-  return pad(s / 3600) + ':' + pad((s % 3600) / 60) + ':' + pad(s % 60);
-}
-function formatTime(iso) {
-  var d = new Date(iso);
-  return pad(d.getHours()) + ':' + pad(d.getMinutes());
+function save() {
+  localStorage.setItem(STORE_KEY, JSON.stringify(tickets));
 }
 
-function updateTimer() {
-  if (state === 'idle') return;
-  var nowMs = Date.now();
-  if (state === 'running') {
-    var elapsed = nowMs - timerStart - totalPausedMs;
-    document.getElementById('timer-display').textContent = formatElapsed(Math.max(0, elapsed));
-  } else if (state === 'paused') {
-    // FIX 1: Timer counts UP showing how long the current pause has lasted (orange, not frozen)
-    var pauseElapsed = nowMs - pauseStart;
-    document.getElementById('timer-display').textContent = formatElapsed(Math.max(0, pauseElapsed));
-    // Keep meta updated with work accumulated before this pause
-    var workMs = pauseStart - timerStart - totalPausedMs;
-    var proj = document.getElementById('project-select').value;
-    var tag  = document.getElementById('tag-select').value;
-    document.getElementById('timer-meta').innerHTML =
-      '<span>' + proj + '</span> &middot; ' + tag + ' &middot; work so far: ' + formatElapsed(Math.max(0, workMs));
+function saveConfig() {
+  localStorage.setItem(CFG_KEY, JSON.stringify(config));
+}
+
+function nextId() {
+  const nums = tickets.map(t => parseInt(t.id.replace('TK-', '')) || 0);
+  const max = nums.length ? Math.max(...nums) : 0;
+  return 'TK-' + String(max + 1).padStart(3, '0');
+}
+
+function showToast(msg, error = false) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.style.borderColor = error ? 'var(--red-border)' : 'var(--green-border)';
+  el.style.color = error ? 'var(--red)' : 'var(--green)';
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function openSettings() {
+  document.getElementById('s-webhook-create').value = config.webhookCreate || '';
+  document.getElementById('s-webhook-update').value = config.webhookUpdate || '';
+  document.getElementById('s-webhook-get').value = config.webhookGet || '';
+  document.getElementById('s-webhook-delete').value = config.webhookDelete || '';
+  document.getElementById('s-webhook-notify').value = config.webhookNotify || '';
+  document.getElementById('s-username').value = config.username || '';
+  document.getElementById('s-initials').value = config.initials || '';
+  document.getElementById('s-team').value = config.team.map(t => t.name + ',' + t.initials + ',' + (t.role || 'Team Member')).join('\n');
+  document.getElementById('s-projects').value = config.projects.join('\n');
+  openModal('settings-modal');
+}
+
+function saveSettings() {
+  config.webhookCreate = document.getElementById('s-webhook-create').value.trim();
+  config.webhookUpdate = document.getElementById('s-webhook-update').value.trim();
+  config.webhookGet = document.getElementById('s-webhook-get').value.trim();
+  config.webhookDelete = document.getElementById('s-webhook-delete').value.trim();
+  config.webhookNotify = document.getElementById('s-webhook-notify').value.trim();
+  config.username = document.getElementById('s-username').value.trim() || 'Gerard LM';
+  config.initials = document.getElementById('s-initials').value.trim().toUpperCase() || 'GL';
+  const teamRaw = document.getElementById('s-team').value.trim().split('\n').filter(Boolean);
+  config.team = teamRaw.map(line => {
+    const parts = line.split(',');
+    return { name: parts[0].trim(), initials: (parts[1] || '??').trim().toUpperCase(), role: (parts[2] || 'Team Member').trim() };
+  });
+  const projRaw = document.getElementById('s-projects').value.trim().split('\n').filter(Boolean);
+  config.projects = projRaw.map(p => p.trim()).filter(Boolean);
+  saveConfig();
+  updateUserDisplay();
+  refreshFilters();
+  renderBoard();
+  updateN8nStatus();
+  // Re-enforce hardcoded webhooks
+  Object.assign(config, WEBHOOKS);
+  closeModal('settings-modal');
+  showToast('Settings saved');
+}
+
+function updateUserDisplay() {
+  document.getElementById('user-name').textContent = config.username;
+  document.getElementById('user-avatar').textContent = config.initials;
+  const roleEl = document.getElementById('user-role');
+  if (roleEl) roleEl.textContent = config.role || 'Team Member';
+  const show = config.isAdmin ? 'flex' : 'none';
+  const settingsNav = document.getElementById('settings-nav');
+  const settingsSection = document.getElementById('settings-section');
+  if (settingsNav) settingsNav.style.display = show;
+  if (settingsSection) settingsSection.style.display = show;
+}
+
+function updateN8nStatus() {
+  const dot = document.getElementById('n8n-dot');
+  const txt = document.getElementById('n8n-status-text');
+  const syncTxt = document.getElementById('sync-text');
+  if (config.webhookGet || config.webhookCreate) {
+    dot.classList.add('connected');
+    dot.classList.remove('error');
+    txt.textContent = 'N8N connected';
+    syncTxt.textContent = 'Notion sync enabled · Last sync: never — press "Sync Notion" to load tickets';
+    document.getElementById('sync-dot').style.background = 'var(--green)';
+  } else {
+    dot.classList.remove('connected');
+    txt.textContent = 'N8N disconnected';
+    syncTxt.textContent = 'Configure N8N webhook URL in Settings to enable Notion sync';
+    document.getElementById('sync-dot').style.background = 'var(--yellow)';
   }
 }
 
-function setUIState(s) {
-  state = s;
-  var card = document.getElementById('timer-card');
-  var dot  = document.getElementById('status-dot');
-  var txt  = document.getElementById('status-text');
-  var disp = document.getElementById('timer-display');
-  var meta = document.getElementById('timer-meta');
-  var grid = document.getElementById('btn-grid');
-  var proj = document.getElementById('project-select').value;
-  var tag  = document.getElementById('tag-select').value;
-
-  card.className = 'timer-card ' + (s !== 'idle' ? s : '');
-  dot.className  = 'status-dot '  + (s !== 'idle' ? s : '');
-  disp.className = 'timer-display ' + (s !== 'idle' ? s : '');
-
-  clearInterval(timerInterval);
-
-  if (s === 'idle') {
-    txt.textContent = 'Idle'; txt.className = 'status-text';
-    disp.textContent = '00:00:00';
-    meta.textContent = 'Select a project and check in';
-    grid.innerHTML = '<button class="btn btn-start btn-full" onclick="doCheckin()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>'
-      + 'Check in</button>';
-
-  } else if (s === 'running') {
-    txt.textContent = 'Running'; txt.className = 'status-text running';
-    meta.innerHTML = '<span>' + proj + '</span> &middot; ' + tag + ' &middot; since ' + formatTime(new Date(timerStart).toISOString());
-    grid.innerHTML =
-      '<button class="btn btn-pause" onclick="doPause()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
-      + 'Pause</button>'
-      + '<button class="btn btn-stop" onclick="doCheckout()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
-      + 'Check out</button>'
-      + '<button class="btn btn-new btn-full" onclick="doNewEntry()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>'
-      + 'New entry (change project/tag)</button>';
-    timerInterval = setInterval(updateTimer, 1000);
-
-  } else if (s === 'paused') {
-    txt.textContent = 'Paused'; txt.className = 'status-text paused';
-    var workMs = pauseStart - timerStart - totalPausedMs;
-    meta.innerHTML = '<span>' + proj + '</span> &middot; ' + tag + ' &middot; work so far: ' + formatElapsed(Math.max(0, workMs));
-    disp.textContent = '00:00:00';
-    grid.innerHTML =
-      '<button class="btn btn-resume" onclick="doResume()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polygon points="10,8 16,12 10,16"/></svg>'
-      + 'Resume</button>'
-      + '<button class="btn btn-stop" onclick="doCheckout()">'
-      + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>'
-      + 'Check out</button>';
-    // FIX 1: Keep interval running so pause duration counts up in orange
-    timerInterval = setInterval(updateTimer, 1000);
-  }
-}
-
-function showToast(msg, type) {
-  var t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + (type || '');
-  setTimeout(function() { t.className = 'toast'; }, 3000);
-}
-
-function loading(show) {
-  document.getElementById('loading').className = 'loading-overlay' + (show ? ' show' : '');
-}
-
-// FIX 3: callWebhook now returns {ok, status, data} instead of a plain boolean
-async function callWebhook(action, extra) {
-  var payload = Object.assign({
-    person:    currentPerson,
-    project:   document.getElementById('project-select').value,
-    tag:       document.getElementById('tag-select').value,
-    timestamp: now()
-  }, extra || {});
-  try {
-    var r = await fetch(WEBHOOKS[action], {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    var data = await r.json().catch(function() { return {}; });
-    return { ok: r.ok, status: r.status, data: data };
-  } catch(e) {
-    return { ok: false, status: 0, data: {} };
-  }
-}
-
-function addEntry(project, tag, startTime) {
-  entries.push({ project: project, tag: tag, startTime: startTime, endTime: null, status: 'active', breakMs: 0, id: Date.now() });
-  renderEntries();
-}
-
-// FIX 2: renderEntries shows accumulated break time on entries with pauses
-function renderEntries() {
-  var list = document.getElementById('entries-list');
-  if (!entries.length) {
-    list.innerHTML = '<div class="entry" style="justify-content:center;padding:20px"><span style="font-size:13px;color:var(--text3)">No entries yet today</span></div>';
+async function syncFromNotion() {
+  if (!config.webhookGet) {
+    showToast('Sync not configured — contact your admin', true);
     return;
   }
-  list.innerHTML = entries.slice().reverse().map(function(e) {
-    var tagClass = e.tag.includes('501') ? 'tag-montage'
-      : e.tag.includes('900') ? 'tag-fahrzeit'
-      : e.tag.includes('750') ? 'tag-buro'
-      : 'tag-other';
-
-    var durStr = '';
-    if (e.status === 'active') {
-      var elapsed = Date.now() - new Date(e.startTime).getTime() - (e.breakMs || 0);
-      durStr = '<span class="entry-dur active">' + formatElapsed(Math.max(0, elapsed)) + ' &#9654;</span>';
-    } else if (e.endTime) {
-      var netMs = new Date(e.endTime) - new Date(e.startTime) - (e.breakMs || 0);
-      var inner = formatElapsed(Math.max(0, netMs));
-      if (e.breakMs > 0) {
-        inner += ' <span style="color:var(--amber);font-size:10px">&#9646; ' + formatElapsed(e.breakMs) + '</span>';
-      }
-      durStr = '<span class="entry-dur">' + inner + '</span>';
+  const btn = document.querySelector('button[onclick="syncFromNotion()"]');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span> Syncing...';
+  btn.disabled = true;
+  try {
+    const res = await fetch(config.webhookGet, { method: 'GET' });
+    const data = await res.json();
+    const items = Array.isArray(data) ? data : (data.tickets || data.results || []);
+    if (items.length) {
+      tickets = items.map(t => ({
+        id: t.id || nextId(),
+        title: t.title || t.Title || '',
+        description: t.description || t.Description || '',
+        project: t.project || t.Project || '',
+        assigned: Array.isArray(t.assigned) ? t.assigned : (t.assigned || t.Assigned ? (t.assigned || t.Assigned).split(',').map(s=>s.trim()).filter(Boolean) : []),
+        priority: t.priority || t.Priority || 'Medium',
+        status: t.status || t.Status || 'Pending',
+        deadline: t.deadline || t.Deadline || '',
+        notionId: t.notionId || t.notion_id || t.id || '',
+        createdAt: t.createdAt || new Date().toISOString()
+      }));
+      save();
+      renderBoard();
+      updateMetrics();
+      refreshFilters();
+      document.getElementById('sync-text').textContent = `Synced from Notion · ${items.length} tickets · ${new Date().toLocaleTimeString()}`;
+      showToast(`${items.length} tickets loaded from Notion`);
+      checkDeadlineWarnings();
+    } else {
+      showToast('No tickets returned from Notion', true);
     }
+  } catch (e) {
+    showToast('Sync failed: ' + e.message, true);
+  }
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
 
-    return '<div class="entry">'
-      + '<div class="entry-left">'
-      + '<span class="entry-tag ' + tagClass + '">' + e.tag.split(' ').slice(0,2).join(' ') + '</span>'
-      + '<div class="entry-project">' + e.project + '</div>'
-      + '</div>'
-      + '<div class="entry-right">'
-      + '<div class="entry-time">' + formatTime(e.startTime) + (e.endTime ? ' &ndash; ' + formatTime(e.endTime) : ' &ndash; now') + '</div>'
-      + durStr
-      + '</div>'
-      + '</div>';
+function openNewTicket() {
+  editingId = null;
+  document.getElementById('modal-title').textContent = '// new_ticket';
+  document.getElementById('f-title').value = '';
+  document.getElementById('f-description').value = '';
+  document.getElementById('f-priority').value = 'Medium';
+  document.getElementById('f-status').value = 'Pending';
+  document.getElementById('f-deadline').value = '';
+  populateFormSelects();
+  document.getElementById('f-project').value = activeProject !== 'all' ? activeProject : '';
+  document.getElementById('f-assigned').value = '';
+  openModal('ticket-modal');
+}
+
+function editCurrentTicket() {
+  const t = tickets.find(x => x.id === viewingId);
+  if (!t) return;
+  closeModal('detail-modal');
+  editingId = t.id;
+  document.getElementById('modal-title').textContent = '// edit_ticket · ' + t.id;
+  populateFormSelects();
+  document.getElementById('f-title').value = t.title;
+  document.getElementById('f-description').value = t.description || '';
+  document.getElementById('f-project').value = t.project || '';
+  const fa = document.getElementById('f-assigned');
+  const assignedArr = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+  Array.from(fa.options).forEach(o => o.selected = assignedArr.includes(o.value));
+  document.getElementById('f-priority').value = t.priority || 'Medium';
+  document.getElementById('f-status').value = t.status || 'Pending';
+  document.getElementById('f-deadline').value = t.deadline || '';
+  openModal('ticket-modal');
+}
+
+function populateFormSelects() {
+  const fp = document.getElementById('f-project');
+  fp.innerHTML = '<option value="">— select —</option>';
+  config.projects.forEach(p => fp.innerHTML += `<option value="${p}">${p}</option>`);
+  const fa = document.getElementById('f-assigned');
+  fa.innerHTML = '';
+  config.team.forEach(m => fa.innerHTML += `<option value="${m.name}">${m.name}</option>`);
+}
+
+
+async function sendNotification(event, ticket, changedBy) {
+  if (!config.webhookNotify) return;
+  try {
+    await fetch(config.webhookNotify, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ event, ticket, changedBy: changedBy || config.username })
+    });
+  } catch(e) { console.warn('Notification failed:', e); }
+}
+
+async function saveTicket() {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { showToast('Title is required', true); return; }
+  const btn = document.getElementById('save-btn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span> Saving...';
+  btn.disabled = true;
+
+  const payload = {
+    title,
+    description: document.getElementById('f-description').value.trim(),
+    project: document.getElementById('f-project').value,
+    assigned: Array.from(document.getElementById('f-assigned').selectedOptions).map(o => o.value).filter(Boolean),
+    priority: document.getElementById('f-priority').value,
+    status: document.getElementById('f-status').value,
+    deadline: document.getElementById('f-deadline').value,
+  };
+
+  if (editingId) {
+    const idx = tickets.findIndex(t => t.id === editingId);
+    if (idx !== -1) {
+      tickets[idx] = { ...tickets[idx], ...payload };
+      sendNotification('status_changed', tickets[idx], config.username);
+      if (config.webhookUpdate) {
+        try {
+          await fetch(config.webhookUpdate, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ...tickets[idx] })
+          });
+        } catch(e) { console.warn('N8N update failed:', e); }
+      }
+      showToast('Ticket updated');
+    }
+  } else {
+    const newTicket = { id: nextId(), ...payload, createdAt: new Date().toISOString() };
+    tickets.push(newTicket);
+    sendNotification('created', newTicket, config.username);
+    if (config.webhookCreate) {
+      try {
+        const res = await fetch(config.webhookCreate, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(newTicket)
+        });
+        const data = await res.json();
+        if (data.notionId || data.notion_id) {
+          newTicket.notionId = data.notionId || data.notion_id;
+        }
+        showToast('Ticket created and sent to Notion ✓');
+      } catch(e) {
+        showToast('Ticket saved locally (N8N unreachable)', true);
+      }
+    } else {
+      showToast('Ticket created (local — no N8N configured)');
+    }
+  }
+
+  save();
+  renderBoard();
+  updateMetrics();
+  refreshFilters();
+  closeModal('ticket-modal');
+  btn.innerHTML = orig;
+  btn.disabled = false;
+}
+
+function openTicketDetail(id) {
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  viewingId = id;
+  document.getElementById('detail-modal-title').textContent = '// ' + t.id;
+  const priorityClass = getPriorityClass(t.priority);
+  const statusClass = getStatusClass(t.status);
+  const urgent = isUrgent(t.deadline);
+  const assignedArr = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+
+  const deadlineHtml = t.deadline
+    ? '<span class="deadline-chip ' + (urgent ? 'urgent' : '') + '"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M6 3v3l2 1"/></svg>' + t.deadline + '</span>'
+    : '';
+  const descHtml = t.description
+    ? '<div class="detail-description">' + escHtml(t.description) + '</div>'
+    : '';
+  const assignedHtml = assignedArr.length
+    ? assignedArr.map(name => {
+        const ac = getAvatarColor(name);
+        return '<span class="assignee-chip" style="background:' + ac.bg + ';color:' + ac.fg + ';border-color:' + ac.border + '">' + getInitials(name) + '</span> ' + escHtml(name);
+      }).join('<span style="color:var(--text3);margin:0 4px">·</span>')
+    : '—';
+  const notionHtml = t.notionId
+    ? '<div class="detail-field"><span class="detail-key">Notion ID</span><span class="detail-val" style="font-family:monospace;font-size:11px;color:var(--text3)">' + t.notionId + '</span></div>'
+    : '';
+  const statusBtns = STATUSES.map(s => {
+    const cls = 'btn' + (t.status === s ? ' btn-primary' : '');
+    return '<button class="' + cls + '" onclick="quickStatus(\'' + id + '\',\'' + s + '\')">' + s + '</button>';
   }).join('');
+
+  document.getElementById('detail-content').innerHTML =
+    '<div style="margin-bottom:12px">' +
+      '<h2 style="font-size:16px;font-weight:500;color:var(--text);line-height:1.4;margin-bottom:8px">' + escHtml(t.title) + '</h2>' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">' +
+        '<span class="priority-badge ' + priorityClass + '"><span class="dot" style="background:currentColor"></span>' + t.priority + '</span>' +
+        '<span class="status-pill ' + statusClass + '">' + t.status + '</span>' +
+        deadlineHtml +
+      '</div>' +
+    '</div>' +
+    descHtml +
+    '<div class="detail-field"><span class="detail-key">Project</span><span class="detail-val">' + (t.project || '—') + '</span></div>' +
+    '<div class="detail-field"><span class="detail-key">Assigned</span><span class="detail-val" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">' + assignedHtml + '</span></div>' +
+    '<div class="detail-field"><span class="detail-key">Created</span><span class="detail-val">' + (t.createdAt ? new Date(t.createdAt).toLocaleDateString("en-GB") : '—') + '</span></div>' +
+    notionHtml +
+    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px">' + statusBtns + '</div>';
+
+  // Show/hide edit and delete buttons based on assignment
+  const isAssigned = assignedArr.includes(config.username);
+  const canEdit = config.isAdmin || isAssigned;
+  const editBtn = document.getElementById('edit-ticket-btn');
+  const deleteBtn = document.getElementById('delete-ticket-btn');
+  if (editBtn) editBtn.style.display = canEdit ? 'inline-flex' : 'none';
+  if (deleteBtn) deleteBtn.style.display = canEdit ? 'inline-flex' : 'none';
+
+  openModal('detail-modal');
 }
 
-async function doCheckin() {
-  loading(true);
-  var res = await callWebhook('checkin');
-  loading(false);
-  if (res.ok) {
-    timerStart = Date.now();
-    totalPausedMs = 0;
-    addEntry(
-      document.getElementById('project-select').value,
-      document.getElementById('tag-select').value,
-      new Date().toISOString()
-    );
-    setUIState('running');
-    showToast('Checked in', 'success');
-  } else if (res.status === 409) {
-    // FIX 3: Show 409 error message from the backend instead of failing silently
-    showToast(res.data.error || 'Ya hay una entrada activa para esta persona', 'error');
-  } else {
-    showToast('Connection error — check your network', 'error');
+function quickStatus(id, status) {
+  const t = tickets.find(x => x.id === id);
+  if (!t) return;
+  const assignedArr = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+  if (!config.isAdmin && !assignedArr.includes(config.username)) {
+    showToast('You are not assigned to this ticket', true);
+    return;
+  }
+  t.status = status;
+  save();
+  renderBoard();
+  updateMetrics();
+  openTicketDetail(id);
+  showToast(id + ' → ' + status);
+  sendNotification('status_changed', t, config.username);
+  if (config.webhookUpdate) {
+    fetch(config.webhookUpdate, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(t)
+    }).catch(() => {});
   }
 }
 
-async function doPause() {
-  loading(true);
-  var res = await callWebhook('pause');
-  loading(false);
-  if (res.ok) {
-    pauseStart = Date.now();
-    var entry = entries[entries.length - 1];
-    if (entry) entry.status = 'paused';
-    renderEntries();
-    setUIState('paused');
-    showToast('Paused', 'success');
-  } else {
-    showToast('Connection error', 'error');
+
+async function deleteCurrentTicket() {
+  const t = tickets.find(x => x.id === viewingId);
+  if (!t) return;
+  if (!confirm(`Delete ticket ${t.id} "${t.title}"?\nThis cannot be undone.`)) return;
+  const btn = document.getElementById('delete-ticket-btn');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span class="loading-spinner"></span>';
+  btn.disabled = true;
+  if (config.webhookDelete && t.notionId) {
+    try {
+      await fetch(config.webhookDelete, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ notionId: t.notionId })
+      });
+    } catch(e) { console.warn('N8N delete failed:', e); }
   }
+  sendNotification('deleted', t, config.username);
+  tickets = tickets.filter(x => x.id !== viewingId);
+  save();
+  closeModal('detail-modal');
+  renderBoard();
+  updateMetrics();
+  refreshFilters();
+  showToast(t.id + ' deleted');
+  btn.innerHTML = orig;
+  btn.disabled = false;
 }
 
-async function doResume() {
-  loading(true);
-  var res = await callWebhook('resume');
-  loading(false);
-  if (res.ok) {
-    var pauseDuration = Date.now() - pauseStart;
-    totalPausedMs += pauseDuration;
-    // FIX 2: Update existing entry (accumulate break) — don't create a new entry
-    var entry = entries[entries.length - 1];
-    if (entry) {
-      entry.breakMs = (entry.breakMs || 0) + pauseDuration;
-      entry.status = 'active';
+function getInitials(name) {
+  if (!name) return '?';
+  if (Array.isArray(name)) name = name[0];
+  if (!name) return '?';
+  const m = config.team.find(t => t.name === name);
+  if (m) return m.initials;
+  return name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+}
+
+function getPriorityClass(p) {
+  return { Critical: 'p-critical', High: 'p-high', Medium: 'p-medium', Low: 'p-low' }[p] || 'p-low';
+}
+
+function getStatusClass(s) {
+  return {
+    'Pending': 's-pending', 'In progress': 's-inprogress',
+    'Blocked': 's-blocked', 'Done': 's-done', 'Delivered': 's-delivered'
+  }[s] || 's-pending';
+}
+
+function isUrgent(deadline) {
+  if (!deadline) return false;
+  const d = new Date(deadline);
+  const today = new Date();
+  return d <= new Date(today.getTime() + 2 * 86400000);
+}
+
+function escHtml(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function getAvatarColor(name) {
+  const colors = [
+    { bg: 'var(--blue-bg)', fg: 'var(--blue)', border: 'var(--blue-border)' },
+    { bg: 'var(--green-bg)', fg: 'var(--green)', border: 'var(--green-border)' },
+    { bg: 'var(--purple-bg)', fg: 'var(--purple)', border: 'var(--purple-border)' },
+    { bg: 'var(--orange-bg)', fg: 'var(--orange)', border: 'var(--orange-border)' },
+    { bg: 'var(--yellow-bg)', fg: 'var(--yellow)', border: 'var(--yellow-border)' },
+  ];
+  let hash = 0;
+  for (let i = 0; i < (name || '').length; i++) hash = (hash * 31 + name.charCodeAt(i)) & 0xffffffff;
+  return colors[Math.abs(hash) % colors.length];
+}
+
+function filteredTickets() {
+  return tickets.filter(t => {
+    const projOk = activeProject === 'all' || t.project === activeProject;
+    const asgn = document.getElementById('assignee-filter').value;
+    const tAssigned = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+    const asgnOk = asgn === 'all' || tAssigned.includes(asgn);
+    const prio = document.getElementById('priority-filter').value;
+    const prioOk = prio === 'all' || t.priority === prio;
+    const statusEl = document.getElementById('status-filter');
+    const statusVal = statusEl ? statusEl.value : 'all';
+    const statusOk = statusVal === 'all' || t.status === statusVal;
+    return projOk && asgnOk && prioOk && statusOk;
+  });
+}
+
+function renderBoard() {
+  const board = document.getElementById('kanban-board');
+  board.innerHTML = '';
+  const visible = filteredTickets();
+  document.getElementById('nb-tickets').textContent = tickets.filter(t => t.status !== 'Delivered').length;
+
+  STATUSES.forEach(status => {
+    const col = document.createElement('div');
+    col.className = 'column';
+    const colTickets = visible.filter(t => t.status === status)
+      .sort((a, b) => (PRIORITY_ORDER[a.priority] || 9) - (PRIORITY_ORDER[b.priority] || 9));
+
+    col.innerHTML = `
+      <div class="col-header">
+        <div class="col-dot" style="background:${STATUS_COLORS[status]}"></div>
+        <span class="col-title">${status}</span>
+        <span class="col-count">${colTickets.length}</span>
+      </div>
+      <div class="col-body" id="col-${status.replace(' ','-')}"></div>
+      <div class="add-ticket-btn" onclick="openNewTicketInStatus('${status}')">
+        <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1v12M1 7h12"/></svg>
+        Add ticket
+      </div>
+    `;
+    board.appendChild(col);
+
+    const body = col.querySelector('.col-body');
+    colTickets.forEach(t => {
+      const card = document.createElement('div');
+      card.className = 'ticket';
+      const assignedArr = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+      const urgent = isUrgent(t.deadline);
+      const avatarChips = assignedArr.map(name => {
+        const ini = getInitials(name); const ac2 = getAvatarColor(name);
+        return '<span class="assignee-chip" style="background:' + ac2.bg + ';color:' + ac2.fg + ';border-color:' + ac2.border + '">' + ini + '</span>';
+      }).join('');
+      const deadlineHtml = t.deadline ? '<span class="deadline-chip ' + (urgent ? 'urgent' : '') + '"><svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="6" cy="6" r="4.5"/><path d="M6 3v3l2 1"/></svg>' + (urgent ? 'Today' : t.deadline) + '</span>' : '';
+      const blockedHtml = status === 'Blocked' ? '<span class="blocked-tag">⚠ Blkd</span>' : '';
+      card.innerHTML = '<div class="ticket-meta"><span class="ticket-project">' + escHtml(t.project || 'No project') + '</span><span class="ticket-id">' + t.id + '</span></div>' +
+        '<div class="ticket-title">' + escHtml(t.title) + '</div>' +
+        '<div class="ticket-footer"><span class="priority-badge ' + getPriorityClass(t.priority) + '"><span class="dot" style="background:currentColor"></span>' + t.priority + '</span>' +
+        blockedHtml + deadlineHtml +
+        '<span style="margin-left:auto;display:flex;gap:3px">' + avatarChips + '</span></div>';
+      card.onclick = () => openTicketDetail(t.id);
+      body.appendChild(card);
+    });
+  });
+  setTimeout(initMobileColumns, 0);
+}
+
+function renderTable() {
+  const tbody = document.getElementById('table-body');
+  const visible = filteredTickets()
+    .sort((a, b) => (PRIORITY_ORDER[a.priority] || 9) - (PRIORITY_ORDER[b.priority] || 9));
+  tbody.innerHTML = '';
+  visible.forEach(t => {
+    const tr = document.createElement('tr');
+    tr.onclick = () => openTicketDetail(t.id);
+    tr.innerHTML = `
+      <td style="font-family:monospace;color:var(--text3)">${t.id}</td>
+      <td style="color:var(--text)">${escHtml(t.title)}</td>
+      <td>${escHtml(t.project || '—')}</td>
+      <td>${Array.isArray(t.assigned) ? t.assigned.join(', ') : (t.assigned || '—')}</td>
+      <td><span class="priority-badge ${getPriorityClass(t.priority)}" style="display:inline-flex"><span class="dot" style="background:currentColor;margin-right:4px"></span>${t.priority}</span></td>
+      <td><span class="status-pill ${getStatusClass(t.status)}">${t.status}</span></td>
+      <td style="${isUrgent(t.deadline) ? 'color:var(--red)' : ''}">${t.deadline || '—'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+function updateMetrics() {
+  const active = tickets.filter(t => t.status !== 'Delivered' && t.status !== 'Done');
+  const critical = tickets.filter(t => (t.priority === 'Critical' || t.priority === 'High') && t.status !== 'Delivered');
+  const now = new Date();
+  const delivered = tickets.filter(t => {
+    if (t.status !== 'Delivered') return false;
+    const d = new Date(t.createdAt || now);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  const projects = [...new Set(tickets.filter(t => t.status !== 'Delivered').map(t => t.project).filter(Boolean))];
+
+  document.getElementById('m-active').textContent = active.length;
+  document.getElementById('m-active-sub').textContent = active.length > 0 ? `+${Math.min(active.length, 3)} this week` : 'No active tickets';
+  document.getElementById('m-critical').textContent = critical.length;
+  document.getElementById('m-delivered').textContent = delivered.length;
+  document.getElementById('m-delivered-sub').textContent = delivered.length > 0 ? '↑ vs last month' : '0 this month';
+  document.getElementById('m-projects').textContent = projects.length;
+  document.getElementById('m-proj-sub').textContent = projects.length > 0 ? `${[...new Set(projects)].length} location(s)` : 'No active projects';
+  if (typeof updateMobBadge === 'function') updateMobBadge(active.length);
+}
+
+function refreshFilters() {
+  const pf = document.getElementById('project-filter');
+  const activeProjects = [...new Set(tickets.map(t => t.project).filter(Boolean))];
+  const allProjects = [...new Set([...config.projects, ...activeProjects])];
+  pf.innerHTML = '<option value="all">All projects</option>';
+  allProjects.forEach(p => {
+    pf.innerHTML += `<option value="${escHtml(p)}" ${activeProject === p ? 'selected' : ''}>${escHtml(p)}</option>`;
+  });
+  pf.value = activeProject;
+
+  const af = document.getElementById('assignee-filter');
+  const curr = af.value;
+  af.innerHTML = '<option value="all">All</option>';
+  config.team.forEach(m => {
+    af.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+  });
+  af.value = curr;
+}
+
+function setProject(p) {
+  activeProject = p;
+  refreshFilters();
+  renderBoard();
+  if (currentView === 'table') renderTable();
+}
+
+function applyFilters() {
+  renderBoard();
+  if (currentView === 'table') renderTable();
+}
+
+function openNewTicketInStatus(status) {
+  openNewTicket();
+  document.getElementById('f-status').value = status;
+}
+
+function switchView(v) {
+  currentView = v;
+  document.getElementById('view-kanban').classList.toggle('hidden', v !== 'kanban');
+  document.getElementById('view-table').classList.toggle('hidden', v !== 'table');
+  document.getElementById('vb-kanban').classList.toggle('active', v === 'kanban');
+  document.getElementById('vb-table').classList.toggle('active', v === 'table');
+  if (v === 'table') renderTable();
+}
+
+function setView(v) {
+  ['kanban','projects','team','calendar','summary','alerts','time'].forEach(x => {
+    const el = document.getElementById('view-' + x);
+    if (el) el.classList.toggle('hidden', x !== v);
+  });
+  // also hide table view when switching
+  const tableView = document.getElementById('view-table');
+  if (tableView) tableView.classList.add('hidden');
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  const filterBar = document.getElementById('filter-bar');
+  filterBar.style.display = v === 'kanban' ? 'flex' : 'none';
+  if (v === 'kanban') { currentView = 'kanban'; renderBoard(); }
+  if (v === 'team') renderTeam();
+  if (v === 'projects') renderProjects();
+  if (v === 'summary') renderSummary();
+  if (v === 'alerts') renderAlerts();
+  if (v === 'calendar') renderCalendar();
+  if (v === 'time') renderTimeTracker();
+  closeSidebar();
+}
+
+function exportCSV() {
+  const headers = ['ID','Title','Project','Assigned','Priority','Status','Deadline','Created'];
+  const rows = tickets.map(t => [
+    t.id, `"${(t.title||'').replace(/"/g,'""')}"`, t.project||'',
+    t.assigned||'', t.priority||'', t.status||'', t.deadline||'',
+    t.createdAt ? new Date(t.createdAt).toLocaleDateString('en-GB') : ''
+  ]);
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+  a.download = `grosselan_tickets_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  showToast('CSV exported');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    ['ticket-modal','detail-modal','settings-modal'].forEach(id => {
+      document.getElementById(id).classList.remove('open');
+    });
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+    e.preventDefault();
+    openNewTicket();
+  }
+});
+
+
+
+// ── TEAM VIEW ──────────────────────────────────────────
+function renderTeam() {
+  const grid = document.getElementById('team-grid');
+  const countEl = document.getElementById('team-count');
+  if (!grid) return;
+  countEl.textContent = config.team.length + ' members';
+  grid.innerHTML = '';
+  config.team.forEach(m => {
+    const myTickets = tickets.filter(t => {
+      const arr = Array.isArray(t.assigned) ? t.assigned : (t.assigned ? [t.assigned] : []);
+      return arr.includes(m.name);
+    });
+    const active = myTickets.filter(t => t.status !== 'Done' && t.status !== 'Delivered').length;
+    const critical = myTickets.filter(t => (t.priority === 'Critical' || t.priority === 'High') && t.status !== 'Done' && t.status !== 'Delivered').length;
+    const ac = getAvatarColor(m.name);
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;display:flex;flex-direction:column;gap:12px';
+    card.innerHTML =
+      '<div style="display:flex;align-items:center;gap:12px">' +
+        '<div style="width:40px;height:40px;border-radius:50%;background:' + ac.bg + ';color:' + ac.fg + ';border:1px solid ' + ac.border + ';display:flex;align-items:center;justify-content:center;font-family:monospace;font-size:13px;font-weight:600;flex-shrink:0">' + m.initials + '</div>' +
+        '<div><div style="font-size:13px;font-weight:500;color:var(--text)">' + m.name + '</div>' +
+        '<div style="font-size:11px;color:var(--text3);margin-top:2px">' + (m.role || 'Team Member') + '</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px">' +
+        '<div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:8px;text-align:center">' +
+          '<div style="font-size:18px;font-weight:500;font-family:monospace;color:var(--text)">' + active + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Active</div>' +
+        '</div>' +
+        '<div style="flex:1;background:' + (critical > 0 ? 'var(--red-bg)' : 'var(--bg3)') + ';border:1px solid ' + (critical > 0 ? 'var(--red-border)' : 'var(--border)') + ';border-radius:var(--radius);padding:8px;text-align:center">' +
+          '<div style="font-size:18px;font-weight:500;font-family:monospace;color:' + (critical > 0 ? 'var(--red)' : 'var(--text)') + '">' + critical + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Critical</div>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+// ── PROJECTS VIEW ──────────────────────────────────────
+const PROJECT_LIST = [
+  { name: 'RÜB Fischweier', client: 'Albtal', location: 'Fischweier, BW', priority: 'High', id: 'PRJ-1' },
+  { name: 'Allgemein 2026', client: '—', location: 'Intern', priority: 'Low', id: 'PRJ-2' },
+  { name: 'AV Albtal BA2', client: 'Albtal', location: 'Intern', priority: 'High', id: 'PRJ-3' },
+  { name: 'Büro', client: '—', location: 'Intern', priority: 'Low', id: 'PRJ-4' },
+  { name: 'KFP-MSE Filterpresse', client: 'MSE', location: 'Intern', priority: 'Medium', id: 'PRJ-5' },
+  { name: 'Schwäbisch Hall / HST', client: '—', location: 'Schwäbisch Hall', priority: 'Medium', id: 'PRJ-6' },
+  { name: 'KA Neurod', client: '—', location: 'Intern', priority: 'Medium', id: 'PRJ-7' },
+  { name: 'KA Reutlingen', client: '—', location: 'Reutlingen', priority: 'Medium', id: 'PRJ-8' },
+  { name: 'KA Waiblingen', client: '—', location: 'Waiblingen', priority: 'Medium', id: 'PRJ-9' },
+  { name: 'KA Steinenbronn', client: '—', location: 'Steinenbronn', priority: 'Medium', id: 'PRJ-10' },
+  { name: 'KA Strudelbach', client: '—', location: 'Strudelbach', priority: 'Medium', id: 'PRJ-11' },
+];
+
+function renderProjects() {
+  const grid = document.getElementById('projects-grid');
+  const countEl = document.getElementById('projects-count');
+  if (!grid) return;
+  countEl.textContent = PROJECT_LIST.length + ' active projects';
+  grid.innerHTML = '';
+  PROJECT_LIST.forEach(p => {
+    const pTickets = tickets.filter(t => t.project === p.name);
+    const active = pTickets.filter(t => t.status !== 'Done' && t.status !== 'Delivered').length;
+    const done = pTickets.filter(t => t.status === 'Done' || t.status === 'Delivered').length;
+    const blocked = pTickets.filter(t => t.status === 'Blocked').length;
+    const prioClass = { High: 'p-high', Medium: 'p-medium', Low: 'p-low', Critical: 'p-critical' }[p.priority] || 'p-low';
+    const card = document.createElement('div');
+    card.style.cssText = 'background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;display:flex;flex-direction:column;gap:10px';
+    card.innerHTML =
+      '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">' +
+        '<div>' +
+          '<div style="font-size:13px;font-weight:500;color:var(--text);margin-bottom:3px">' + p.name + '</div>' +
+          '<div style="font-size:11px;color:var(--text3);font-family:monospace">' + p.id + (p.client !== '—' ? ' · ' + p.client : '') + '</div>' +
+        '</div>' +
+        '<span class="priority-badge ' + prioClass + '" style="flex-shrink:0"><span class="dot" style="background:currentColor"></span>' + p.priority + '</span>' +
+      '</div>' +
+      '<div style="font-size:11px;color:var(--text3);display:flex;align-items:center;gap:4px">' +
+        '<svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" style="width:11px;height:11px"><circle cx="6" cy="6" r="4.5"/></svg>' +
+        p.location +
+      '</div>' +
+      '<div style="display:flex;gap:6px;margin-top:2px">' +
+        '<div style="flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:6px 8px;text-align:center">' +
+          '<div style="font-size:16px;font-weight:500;font-family:monospace;color:var(--text)">' + active + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Open</div>' +
+        '</div>' +
+        '<div style="flex:1;background:' + (blocked > 0 ? 'var(--red-bg)' : 'var(--bg3)') + ';border:1px solid ' + (blocked > 0 ? 'var(--red-border)' : 'var(--border)') + ';border-radius:var(--radius);padding:6px 8px;text-align:center">' +
+          '<div style="font-size:16px;font-weight:500;font-family:monospace;color:' + (blocked > 0 ? 'var(--red)' : 'var(--text)') + '">' + blocked + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Blocked</div>' +
+        '</div>' +
+        '<div style="flex:1;background:var(--green-bg);border:1px solid var(--green-border);border-radius:var(--radius);padding:6px 8px;text-align:center">' +
+          '<div style="font-size:16px;font-weight:500;font-family:monospace;color:var(--green)">' + done + '</div>' +
+          '<div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em">Done</div>' +
+        '</div>' +
+      '</div>';
+    grid.appendChild(card);
+  });
+}
+
+// ── SUMMARY VIEW ───────────────────────────────────────
+function goToTickets(filters) {
+  // Apply filters and switch to kanban view
+  if (filters.status) {
+    // We need to show all projects but filter by status
+    // Since we don't have a status filter in the bar, we'll filter assignee to all
+    // and use a custom filtered view
+  }
+  if (filters.priority) {
+    const pf = document.getElementById('priority-filter');
+    if (pf) pf.value = filters.priority;
+  } else {
+    const pf = document.getElementById('priority-filter');
+    if (pf) pf.value = 'all';
+  }
+  const sf = document.getElementById('status-filter');
+  if (sf) sf.value = filters.status || 'all';
+  if (filters.project) {
+    activeProject = filters.project;
+    refreshFilters();
+  } else {
+    activeProject = 'all';
+    refreshFilters();
+  }
+  if (filters.assignee) {
+    const af = document.getElementById('assignee-filter');
+    if (af) af.value = filters.assignee;
+  }
+  applyFilters();
+
+  // Switch to kanban view
+  ['kanban','projects','team','calendar','summary','alerts','time'].forEach(x => {
+    const el = document.getElementById('view-' + x);
+    if (el) el.classList.toggle('hidden', x !== 'kanban');
+  });
+  document.getElementById('view-table').classList.add('hidden');
+  document.getElementById('filter-bar').style.display = 'flex';
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(el => {
+    if (el.textContent.trim().startsWith('Tickets')) el.classList.add('active');
+  });
+  // Update mobile nav
+  document.querySelectorAll('.mob-nav-item').forEach(x => x.classList.remove('active'));
+  const mbnTickets = document.getElementById('mbn-tickets');
+  if (mbnTickets) mbnTickets.classList.add('active');
+  currentView = 'kanban';
+  renderBoard();
+
+  // If status filter needed, scroll to that column
+  if (filters.status) {
+    setTimeout(() => {
+      const colId = 'col-' + filters.status.replace(' ', '-');
+      const col = document.getElementById(colId);
+      if (col) col.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 200);
+  }
+
+  // Show toast
+  const parts = [];
+  if (filters.status) parts.push('Status: ' + filters.status);
+  if (filters.priority) parts.push('Priority: ' + filters.priority);
+  if (filters.project) parts.push('Project: ' + filters.project);
+  if (parts.length) showToast('Filtered: ' + parts.join(' · '));
+}
+
+function renderSummary() {
+  const el = document.getElementById('summary-content');
+  if (!el) return;
+  const byStatus = {};
+  const byPriority = {};
+  const byProject = {};
+  STATUSES.forEach(s => byStatus[s] = 0);
+  ['Critical','High','Medium','Low'].forEach(p => byPriority[p] = 0);
+  tickets.forEach(t => {
+    if (byStatus[t.status] !== undefined) byStatus[t.status]++;
+    if (byPriority[t.priority] !== undefined) byPriority[t.priority]++;
+    if (t.project) byProject[t.project] = (byProject[t.project] || 0) + 1;
+  });
+  const total = tickets.length;
+  const blocked = byStatus['Blocked'] || 0;
+  const done = (byStatus['Done'] || 0) + (byStatus['Delivered'] || 0);
+  const critical = byPriority['Critical'] || 0;
+  const inProgress = byStatus['In progress'] || 0;
+  const pending = byStatus['Pending'] || 0;
+  const completionPct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const healthScore = total > 0 ? Math.max(0, Math.round(100 - (blocked/total)*60 - (critical/total)*40)) : 100;
+
+  const statusColors = {
+    Pending: '#6b7f99', 'In progress': '#1a8fd4',
+    Blocked: '#e85050', Done: '#18c058', Delivered: '#7850e0'
+  };
+  const prioColors = {
+    Critical: '#e85050', High: '#d87020', Medium: '#c0a000', Low: '#18c058'
+  };
+
+  function powerBar(label, value, max, color, onclick) {
+    const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+    const cursor = onclick ? 'cursor:pointer' : '';
+    const hover = onclick ? 'onmouseenter="this.style.background=\'var(--bg3)\'" onmouseleave="this.style.background=\'\'"' : '';
+    return '<div style="margin-bottom:18px;padding:8px;border-radius:var(--radius);transition:background 0.15s;' + cursor + '" ' + hover + (onclick ? 'onclick="' + onclick + '"' : '') + '>' +
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-size:13px;color:var(--text);font-weight:500">' + label + '</span>' +
+          (onclick ? '<span style="font-size:10px;color:var(--text3);font-family:IBM Plex Mono,monospace">→ view</span>' : '') +
+        '</div>' +
+        '<span style="font-size:26px;font-family:IBM Plex Mono,monospace;font-weight:500;color:' + color + ';line-height:1">' + value + '</span>' +
+      '</div>' +
+      '<div style="height:14px;background:var(--bg3);border-radius:7px;overflow:hidden;position:relative;border:1px solid var(--border)">' +
+        '<div style="height:100%;width:' + pct + '%;background:' + color + ';border-radius:7px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);min-width:' + (value>0?'14px':'0') + ';opacity:0.9"></div>' +
+        (pct > 12 ? '<span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:9px;font-family:IBM Plex Mono,monospace;color:rgba(255,255,255,0.9);font-weight:600">' + pct + '%</span>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  function kpiCard(label, value, sub, color, onclick) {
+    const clickable = onclick ? 'cursor:pointer;' : '';
+    const onclickAttr = onclick ? 'onclick="' + onclick + '"' : '';
+    const hoverAttrs = onclick ? 'onmouseenter="this.style.transform=\'translateY(-2px)\';this.style.borderColor=\'' + color + '\'" onmouseleave="this.style.transform=\'\';this.style.borderColor=\'var(--border)\'"' : '';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden;transition:transform 0.15s,border-color 0.15s;' + clickable + '" ' + onclickAttr + ' ' + hoverAttrs + '>' +
+      '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:' + color + '"></div>' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text3);font-family:IBM Plex Mono,monospace">' + label + '</div>' +
+      '<div style="font-size:48px;font-family:IBM Plex Mono,monospace;font-weight:500;color:' + color + ';line-height:1;margin:4px 0">' + value + '</div>' +
+      '<div style="font-size:11px;color:var(--text3);font-family:IBM Plex Mono,monospace">' + sub + '</div>' +
+      (onclick ? '<div style="font-size:10px;color:' + color + ';font-family:IBM Plex Mono,monospace;margin-top:2px;opacity:0.7">tap to filter →</div>' : '') +
+    '</div>';
+  }
+
+  function healthGauge(score) {
+    const color = score >= 80 ? '#18c058' : score >= 60 ? '#c0a000' : '#e85050';
+    const label = score >= 80 ? '● GOOD' : score >= 60 ? '● FAIR' : '● AT RISK';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:20px;display:flex;flex-direction:column;gap:6px;position:relative;overflow:hidden">' +
+      '<div style="position:absolute;top:0;left:0;right:0;height:3px;background:' + color + '"></div>' +
+      '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text3);font-family:IBM Plex Mono,monospace">Health score</div>' +
+      '<div style="display:flex;align-items:baseline;gap:8px;margin:4px 0">' +
+        '<div style="font-size:48px;font-family:IBM Plex Mono,monospace;font-weight:500;color:' + color + ';line-height:1">' + score + '</div>' +
+        '<div style="font-size:18px;font-family:IBM Plex Mono,monospace;color:var(--text3)">/100</div>' +
+      '</div>' +
+      '<div style="font-size:11px;font-family:IBM Plex Mono,monospace;color:' + color + ';font-weight:600;letter-spacing:0.1em">' + label + '</div>' +
+      '<div style="height:6px;background:var(--bg3);border-radius:3px;margin-top:4px;overflow:hidden">' +
+        '<div style="height:100%;width:' + score + '%;background:' + color + ';border-radius:3px;transition:width 1s"></div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  let statusBars = Object.entries(byStatus).map(([k,v]) =>
+    powerBar(k, v, total, statusColors[k] || '#888', v > 0 ? "goToTickets({status:'" + k + "'})" : '')
+  ).join('');
+
+  let prioBars = Object.entries(byPriority).map(([k,v]) =>
+    powerBar(k, v, total, prioColors[k] || '#888', v > 0 ? "goToTickets({priority:'" + k + "'})" : '')
+  ).join('');
+
+  let projEntries = Object.entries(byProject).sort((a,b) => b[1]-a[1]).slice(0,8);
+  let projMax = projEntries.length ? projEntries[0][1] : 1;
+  let projBars = projEntries.map(([k,v]) =>
+    powerBar(k, v, projMax, '#1a8fd4', "goToTickets({project:'" + k.replace(/'/g,"\\'") + "'})")
+  ).join('');
+
+  el.innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-bottom:28px">' +
+      kpiCard('Total', total, 'all tickets', '#1a8fd4', '') +
+      kpiCard('Active', inProgress, 'in progress', '#1a8fd4', "goToTickets({status:'In progress'})") +
+      kpiCard('Pending', pending, 'to start', '#6b7f99', "goToTickets({status:'Pending'})") +
+      kpiCard('Blocked', blocked, blocked>0?'urgent':'clear', blocked>0?'#e85050':'#18c058', blocked>0?"goToTickets({status:'Blocked'})":'' ) +
+      kpiCard('Critical', critical, critical>0?'urgent':'clear', critical>0?'#e85050':'#18c058', critical>0?"goToTickets({priority:'Critical'})":'' ) +
+      kpiCard('Done', done, completionPct+'% complete', '#18c058', done>0?"goToTickets({status:'Done'})":'' ) +
+      healthGauge(healthScore) +
+    '</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px">' +
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:24px">' +
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:8px;display:flex;align-items:center;gap:10px">' +
+          '<span style="width:4px;height:16px;background:#1a8fd4;border-radius:2px;display:inline-block"></span>BY STATUS' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:16px">Click a row to filter tickets</div>' +
+        statusBars +
+      '</div>' +
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:24px">' +
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:8px;display:flex;align-items:center;gap:10px">' +
+          '<span style="width:4px;height:16px;background:#e85050;border-radius:2px;display:inline-block"></span>BY PRIORITY' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:16px">Click a row to filter tickets</div>' +
+        prioBars +
+      '</div>' +
+      '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:24px">' +
+        '<div style="font-size:10px;text-transform:uppercase;letter-spacing:0.14em;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:8px;display:flex;align-items:center;gap:10px">' +
+          '<span style="width:4px;height:16px;background:#1a6aad;border-radius:2px;display:inline-block"></span>BY PROJECT' +
+        '</div>' +
+        '<div style="font-size:10px;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:16px">Click a row to filter tickets</div>' +
+        (projBars || '<div style="color:var(--text3);font-size:12px;font-family:IBM Plex Mono,monospace">No data yet</div>') +
+      '</div>' +
+    '</div>';
+}
+// ── ALERTS VIEW ────────────────────────────────────────
+function renderAlerts() {
+  const el = document.getElementById('alerts-content');
+  if (!el) return;
+  const now = new Date();
+  const in48h = new Date(now.getTime() + 48 * 3600000);
+  const critical = tickets.filter(t => t.priority === 'Critical' && t.status !== 'Done' && t.status !== 'Delivered');
+  const overdue = tickets.filter(t => t.deadline && new Date(t.deadline) < now && t.status !== 'Done' && t.status !== 'Delivered');
+  const soon = tickets.filter(t => t.deadline && new Date(t.deadline) >= now && new Date(t.deadline) <= in48h && t.status !== 'Done' && t.status !== 'Delivered');
+  const blocked = tickets.filter(t => t.status === 'Blocked');
+
+  function alertSection(title, items, color, borderColor) {
+    if (!items.length) return '';
+    return '<div style="margin-bottom:20px">' +
+      '<div style="font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:' + color + ';font-family:monospace;margin-bottom:10px;font-weight:500">' + title + ' (' + items.length + ')</div>' +
+      items.map(t => '<div onclick="openTicketDetail(\'' + t.id + '\')" style="background:var(--bg2);border:1px solid ' + borderColor + ';border-radius:var(--radius2);padding:12px 14px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:12px">' +
+        '<span style="font-family:monospace;font-size:11px;color:var(--text3)">' + t.id + '</span>' +
+        '<span style="font-size:13px;color:var(--text);flex:1">' + escHtml(t.title) + '</span>' +
+        '<span style="font-size:11px;color:var(--text3)">' + (t.project || '') + '</span>' +
+        (t.deadline ? '<span style="font-size:11px;color:' + color + ';font-family:monospace">' + t.deadline + '</span>' : '') +
+      '</div>').join('') +
+    '</div>';
+  }
+
+  const html =
+    alertSection('🔴 Critical tickets', critical, 'var(--red)', 'var(--red-border)') +
+    alertSection('⏰ Overdue', overdue, 'var(--red)', 'var(--red-border)') +
+    alertSection('⚠️ Deadline in 48h', soon, 'var(--orange)', 'var(--orange-border)') +
+    alertSection('🚫 Blocked', blocked, 'var(--orange)', 'var(--orange-border)');
+
+  el.innerHTML = html || '<div style="color:var(--text3);font-family:monospace;font-size:13px">✓ No active alerts</div>';
+}
+
+// ── CALENDAR VIEW ──────────────────────────────────────
+let calYear = new Date().getFullYear();
+let calMonth = new Date().getMonth();
+
+function calNav(dir) {
+  calMonth += dir;
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const el = document.getElementById('calendar-grid');
+  const titleEl = document.getElementById('cal-title');
+  if (!el) return;
+  const monthNames = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  titleEl.textContent = monthNames[calMonth] + ' ' + calYear;
+  const firstDay = new Date(calYear, calMonth, 1).getDay();
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const today = new Date();
+  const ticketsByDay = {};
+  tickets.forEach(t => {
+    if (!t.deadline) return;
+    const d = new Date(t.deadline);
+    if (d.getFullYear() === calYear && d.getMonth() === calMonth) {
+      const day = d.getDate();
+      if (!ticketsByDay[day]) ticketsByDay[day] = [];
+      ticketsByDay[day].push(t);
     }
-    renderEntries();
-    setUIState('running');
-    showToast('Resumed', 'success');
-  } else {
-    showToast('Connection error', 'error');
+  });
+  const isMob = window.innerWidth <= 768;
+  const days = isMob ? ['S','M','T','W','T','F','S'] : ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = '<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:1px;background:var(--border)">';
+  days.forEach(d => {
+    html += '<div style="background:var(--bg2);padding:8px;text-align:center;font-size:11px;font-family:monospace;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em">' + d + '</div>';
+  });
+  const startDay = firstDay === 0 ? 6 : firstDay - 1;
+  for (let i = 0; i < startDay; i++) {
+    html += '<div style="background:var(--bg);min-height:' + (isMob?'52px':'80px') + '"></div>';
   }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = d === today.getDate() && calMonth === today.getMonth() && calYear === today.getFullYear();
+    const dayTickets = ticketsByDay[d] || [];
+    html += '<div style="background:var(--bg2);min-height:' + (isMob?'52px':'80px') + ';padding:' + (isMob?'3px':'6px') + ';border-top:' + (isToday ? '2px solid var(--accent)' : '1px solid transparent') + '">' +
+      '<div style="font-size:12px;font-family:monospace;font-weight:' + (isToday ? '600' : '400') + ';color:' + (isToday ? 'var(--accent)' : 'var(--text2)') + ';margin-bottom:4px">' + d + '</div>' +
+      dayTickets.slice(0, isMob?1:3).map(t => {
+        const pc = getPriorityClass(t.priority);
+        return '<div onclick="openTicketDetail(\'' + t.id + '\')" class="priority-badge ' + pc + '" style="display:block;margin-bottom:2px;cursor:pointer;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:' + (isMob?'9px':'10px') + ';max-width:100%;padding:1px ' + (isMob?'3px':'6px') + '">' + (isMob ? t.id : escHtml(t.title)) + '</div>';
+      }).join('') +
+      (dayTickets.length > 3 ? '<div style="font-size:10px;color:var(--text3)">+' + (dayTickets.length-3) + ' more</div>' : '') +
+    '</div>';
+  }
+  html += '</div>';
+  el.innerHTML = html;
 }
 
-async function doCheckout() {
-  loading(true);
-  var res = await callWebhook('checkout');
-  loading(false);
-  if (res.ok) {
-    var entry = entries[entries.length - 1];
-    if (entry) { entry.endTime = new Date().toISOString(); entry.status = 'done'; }
-    renderEntries();
-    setUIState('idle');
-    showToast('Checked out', 'success');
-  } else {
-    showToast('Connection error', 'error');
-  }
+function checkDeadlineWarnings() {
+  if (!config.webhookNotify) return;
+  const now = new Date();
+  const in48h = new Date(now.getTime() + 48 * 3600000);
+  tickets.forEach(t => {
+    if (!t.deadline || t.status === 'Done' || t.status === 'Delivered') return;
+    const d = new Date(t.deadline);
+    if (d >= now && d <= in48h) {
+      sendNotification('deadline_warning', t, config.username);
+    }
+  });
 }
 
-async function doNewEntry() {
-  loading(true);
-  var res = await callWebhook('checkout');
-  loading(false);
-  if (res.ok) {
-    var entry = entries[entries.length - 1];
-    if (entry) { entry.endTime = new Date().toISOString(); entry.status = 'done'; }
-    setTimeout(async function() {
-      loading(true);
-      var res2 = await callWebhook('checkin');
-      loading(false);
-      if (res2.ok) {
-        timerStart = Date.now();
-        totalPausedMs = 0;
-        addEntry(
-          document.getElementById('project-select').value,
-          document.getElementById('tag-select').value,
-          new Date().toISOString()
-        );
-        setUIState('running');
-        showToast('New entry started', 'success');
-      } else if (res2.status === 409) {
-        showToast(res2.data.error || 'Ya hay una entrada activa', 'error');
-      } else {
-        showToast('Connection error', 'error');
+load();
+
+// Load user from URL param: ?user=GL
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const userParam = params.get('user');
+  // Always reset isAdmin to false first — recalculate from URL
+  config.isAdmin = false;
+  if (userParam) {
+    const match = config.team.find(m => m.initials.toUpperCase() === userParam.toUpperCase());
+    if (match) {
+      config.username = match.name;
+      config.initials = match.initials;
+      config.role = match.role || 'Team Member';
+      config.isAdmin = match.initials === 'GL';
+    }
+  } else {
+    // No URL param — check if stored initials are GL
+    config.isAdmin = config.initials === 'GL';
+  }
+})();
+
+updateUserDisplay();
+updateN8nStatus();
+refreshFilters();
+renderBoard();
+updateMetrics();
+
+// Apply URL user param to assignee filter after DOM is ready
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const userParam = params.get('user');
+  if (userParam) {
+    const match = config.team.find(m => m.initials.toUpperCase() === userParam.toUpperCase());
+    if (match) {
+      const af = document.getElementById('assignee-filter');
+      if (af) {
+        af.value = match.name;
+        applyFilters();
       }
-    }, 500);
-  } else {
-    showToast('Connection error', 'error');
+    }
+  }
+})();
+
+// ── AUTO-SYNC ─────────────────────────────────────────
+let autoSyncCountdown = 300;
+let autoSyncInterval = null;
+
+function mapTicket(t) {
+  return {
+    id: t.id || t.ID || '',
+    title: t.title || t.Title || t.name || t.Name || '',
+    description: t.description || t.Description || '',
+    project: t.project || t.Project || '',
+    assigned: Array.isArray(t.assigned) ? t.assigned : Array.isArray(t.Assigned) ? t.Assigned :
+              (t.assigned || t.Assigned) ? String(t.assigned || t.Assigned).split(',').map(s=>s.trim()).filter(Boolean) : [],
+    priority: t.priority || t.Priority || 'Medium',
+    status: t.status || t.Status || 'Pending',
+    deadline: t.deadline || t.Deadline || '',
+    notionId: t.notionId || t.notion_id || t.notionID || t.pageId || t.page_id || '',
+    createdAt: t.createdAt || t.created_at || new Date().toISOString()
+  };
+}
+
+async function autoSync() {
+  if (!config.webhookGet) return;
+  try {
+    const res = await fetch(config.webhookGet, { method: 'GET' });
+    const data = await res.json();
+    const items = Array.isArray(data) ? data : (data.tickets || data.results || data.items || []);
+    if (items.length) {
+      tickets = items.map(mapTicket);
+      save(); renderBoard(); updateMetrics(); refreshFilters();
+      const now = new Date();
+      document.getElementById('sync-text').textContent = `Auto-synced from Notion · ${items.length} tickets · ${now.toLocaleTimeString()} · Next sync in 5:00`;
+      autoSyncCountdown = 300;
+    }
+  } catch(e) { console.warn('Auto-sync failed:', e); }
+}
+
+function startAutoSync() {
+  if (!config.webhookGet) return;
+  autoSync();
+  if (autoSyncInterval) clearInterval(autoSyncInterval);
+  autoSyncInterval = setInterval(() => {
+    autoSyncCountdown--;
+    if (autoSyncCountdown <= 0) {
+      autoSync();
+    } else {
+      const min = Math.floor(autoSyncCountdown / 60);
+      const sec = String(autoSyncCountdown % 60).padStart(2, '0');
+      const syncEl = document.getElementById('sync-text');
+      if (syncEl && syncEl.textContent.includes('Next sync in')) {
+        syncEl.textContent = syncEl.textContent.replace(/Next sync in \d+:\d+/, `Next sync in ${min}:${sec}`);
+      }
+    }
+  }, 1000);
+}
+
+if (config.webhookGet) startAutoSync();
+
+// ── MOBILE FUNCTIONS ─────────────────────────────────
+function openSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if (sb) sb.classList.add('open');
+  if (ov) ov.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeSidebar() {
+  const sb = document.getElementById('sidebar');
+  const ov = document.getElementById('sidebar-overlay');
+  if (sb) sb.classList.remove('open');
+  if (ov) ov.classList.remove('open');
+  document.body.style.overflow = '';
+}
+function setViewMob(v, el) {
+  closeSidebar();
+  document.querySelectorAll('.mob-nav-item').forEach(x => x.classList.remove('active'));
+  if (el) el.classList.add('active');
+  ['kanban','projects','team','calendar','summary','alerts','time'].forEach(x => {
+    const el2 = document.getElementById('view-' + x);
+    if (el2) el2.classList.toggle('hidden', x !== v);
+  });
+  document.getElementById('view-table').classList.add('hidden');
+  document.querySelectorAll('.nav-item').forEach(x => x.classList.remove('active'));
+  document.getElementById('filter-bar').style.display = v === 'kanban' ? 'flex' : 'none';
+  currentView = v === 'kanban' ? 'kanban' : v;
+  const topTitle = document.querySelector('.topbar-title');
+  if (topTitle) {
+    const titles = { kanban: '// ticket_board', projects: '// projects', team: '// team', calendar: '// calendar', summary: '// summary', alerts: '// alerts', time: '// time_tracker' };
+    topTitle.textContent = titles[v] || '// ticket_board';
+  }
+  if (v === 'kanban') renderBoard();
+  if (v === 'team') renderTeam();
+  if (v === 'projects') renderProjects();
+  if (v === 'summary') renderSummary();
+  if (v === 'alerts') renderAlerts();
+  if (v === 'calendar') renderCalendar();
+  if (v === 'time') renderTimeTracker();
+}
+function initMobileColumns() {
+  if (window.innerWidth > 768) return;
+  document.querySelectorAll('.column').forEach(col => {
+    const header = col.querySelector('.col-header');
+    if (!header) return;
+    const titleEl = col.querySelector('.col-title');
+    if (titleEl && (titleEl.textContent === 'Done' || titleEl.textContent === 'Delivered')) col.classList.add('collapsed');
+    const newHeader = header.cloneNode(true);
+    header.parentNode.replaceChild(newHeader, header);
+    newHeader.addEventListener('click', () => col.classList.toggle('collapsed'));
+  });
+}
+function updateMobBadge(count) {
+  const badge = document.getElementById('mbn-badge');
+  if (!badge) return;
+  if (count > 0) { badge.textContent = count > 99 ? '99+' : count; badge.style.display = 'flex'; }
+  else { badge.style.display = 'none'; }
+}
+
+
+// ── TIME TRACKER ─────────────────────────────────────
+const TT_WEBHOOKS = {
+  checkin:  'https://primary-production-96473.up.railway.app/webhook/time-tracker/checkin',
+  pause:    'https://primary-production-96473.up.railway.app/webhook/time-tracker/pause',
+  resume:   'https://primary-production-96473.up.railway.app/webhook/time-tracker/resume',
+  checkout: 'https://primary-production-96473.up.railway.app/webhook/time-tracker/checkout',
+  status:   'https://primary-production-96473.up.railway.app/webhook/time-tracker/status',
+};
+
+const TT_PROJECTS = [
+  'Allgemein 2026','AV Albtal BA2','Büro','KFP-MSE Filterpresse',
+  'Schwäbisch Hall / HST','KA Neurod','KA Reutlingen','KA Waiblingen',
+  'KA Steinenbronn','KA Strudelbach','RÜB Fischweier'
+];
+const TT_TAGS = [
+  '501 Montage','502 Inbetriebnahme','503 Service','504 Wartung',
+  '600 Planung','700 Projektleitung','750 Büro','900 Fahrzeit','999 Sonstiges'
+];
+
+let ttState = 'idle'; // idle | running | paused
+let ttStart = null;
+let ttPauseStart = null;
+let ttPausedMs = 0;
+let ttInterval = null;
+let ttEntries = [];
+
+function ttNow() { return new Date().toISOString(); }
+
+function ttFmt(ms) {
+  if (ms < 0) ms = 0;
+  const h = Math.floor(ms/3600000);
+  const m = Math.floor((ms%3600000)/60000);
+  const s = Math.floor((ms%60000)/1000);
+  return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+}
+function ttFmtTime(iso) {
+  const d = new Date(iso);
+  return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
+}
+
+function renderTimeTracker() {
+  const root = document.getElementById('time-tracker-root');
+  if (!root) return;
+
+  const person = config.username;
+  const initials = config.initials;
+
+  // Timer display value
+  let timerMs = 0;
+  let timerClass = '';
+  let statusLabel = 'IDLE';
+  let statusDotClass = '';
+  if (ttState === 'running') {
+    timerMs = Date.now() - ttStart - ttPausedMs;
+    timerClass = 'color:#18c058';
+    statusLabel = 'RUNNING';
+    statusDotClass = 'background:#18c058';
+  } else if (ttState === 'paused') {
+    timerMs = Date.now() - ttPauseStart;
+    timerClass = 'color:#c0a000';
+    statusLabel = 'PAUSED';
+    statusDotClass = 'background:#c0a000';
+  }
+
+  const projectOpts = TT_PROJECTS.map(p =>
+    `<option value="${p}">${p}</option>`
+  ).join('');
+  const tagOpts = TT_TAGS.map(t =>
+    `<option value="${t}">${t}</option>`
+  ).join('');
+
+  // Buttons
+  let btns = '';
+  if (ttState === 'idle') {
+    btns = `<button onclick="ttCheckin()" style="grid-column:1/-1;background:var(--green);color:var(--bg2);border:none;border-radius:var(--radius2);padding:14px;font-size:14px;font-weight:600;font-family:IBM Plex Sans,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .15s">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><circle cx="10" cy="10" r="8"/><polygon points="8,7 14,10 8,13"/></svg>
+      Check in
+    </button>`;
+  } else if (ttState === 'running') {
+    btns = `
+    <button onclick="ttPause()" style="background:var(--yellow-bg);color:var(--yellow);border:1px solid var(--yellow-border);border-radius:var(--radius2);padding:12px;font-size:13px;font-weight:500;font-family:IBM Plex Sans,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="5" y="4" width="3" height="12"/><rect x="12" y="4" width="3" height="12"/></svg>
+      Pause
+    </button>
+    <button onclick="ttCheckout()" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:var(--radius2);padding:12px;font-size:13px;font-weight:500;font-family:IBM Plex Sans,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="3" width="14" height="14" rx="1"/></svg>
+      Check out
+    </button>
+    <button onclick="ttNewEntry()" style="grid-column:1/-1;background:var(--bg3);color:var(--text2);border:1px solid var(--border);border-radius:var(--radius2);padding:10px;font-size:12px;font-family:IBM Plex Sans,sans-serif;cursor:pointer">
+      + New entry (change project/tag)
+    </button>`;
+  } else if (ttState === 'paused') {
+    btns = `
+    <button onclick="ttResume()" style="background:var(--blue-bg);color:var(--blue);border:1px solid var(--blue-border);border-radius:var(--radius2);padding:12px;font-size:13px;font-weight:500;font-family:IBM Plex Sans,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><circle cx="10" cy="10" r="8"/><polygon points="8,7 14,10 8,13"/></svg>
+      Resume
+    </button>
+    <button onclick="ttCheckout()" style="background:var(--red-bg);color:var(--red);border:1px solid var(--red-border);border-radius:var(--radius2);padding:12px;font-size:13px;font-weight:500;font-family:IBM Plex Sans,sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" style="width:16px;height:16px"><rect x="3" y="3" width="14" height="14" rx="1"/></svg>
+      Check out
+    </button>`;
+  }
+
+  // Entries
+  const entriesHtml = ttEntries.length === 0
+    ? '<div style="padding:20px;text-align:center;font-size:13px;color:var(--text3)">No entries yet today</div>'
+    : ttEntries.slice().reverse().map(e => {
+        const isActive = e.status === 'active';
+        const ms = isActive
+          ? Date.now() - new Date(e.startTime).getTime() - (e.breakMs || 0)
+          : (e.endTime ? new Date(e.endTime) - new Date(e.startTime) - (e.breakMs||0) : 0);
+        const durColor = isActive ? 'color:var(--green)' : 'color:var(--text2)';
+        return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px">
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:500;color:var(--accent);font-family:IBM Plex Mono,monospace;margin-bottom:2px">${e.tag || ''}</div>
+            <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.project || ''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:12px;font-family:IBM Plex Mono,monospace;color:var(--text)">${ttFmtTime(e.startTime)}${e.endTime ? ' – ' + ttFmtTime(e.endTime) : ' – now'}</div>
+            <div style="font-size:11px;font-family:IBM Plex Mono,monospace;${durColor}">${ttFmt(Math.max(0,ms))}${isActive ? ' ▶' : ''}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+  root.innerHTML = `
+    <div style="max-width:480px;margin:0 auto;padding:16px 16px 80px">
+
+      <!-- Header -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+        <div>
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text3);font-family:IBM Plex Mono,monospace">Time Tracker</div>
+          <div style="font-size:13px;color:var(--text);font-weight:500">${person}</div>
+        </div>
+        <div style="width:36px;height:36px;border-radius:50%;background:var(--accent2);color:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;font-family:IBM Plex Mono,monospace">${initials}</div>
+      </div>
+
+      <!-- Timer card -->
+      <div style="background:var(--bg2);border:1px solid ${ttState==='running'?'var(--green-border)':ttState==='paused'?'var(--yellow-border)':'var(--border)'};border-radius:var(--radius2);padding:20px;margin-bottom:12px;${ttState==='running'?'background:var(--green-bg)':ttState==='paused'?'background:var(--yellow-bg)':''}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+          <div style="width:8px;height:8px;border-radius:50%;${statusDotClass||'background:var(--text3)'}"></div>
+          <span style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:.08em;${timerClass||'color:var(--text3)'}">${statusLabel}</span>
+        </div>
+        <div id="tt-display" style="font-family:IBM Plex Mono,monospace;font-size:52px;font-weight:400;line-height:1;margin-bottom:8px;${timerClass||'color:var(--text)'}">${ttFmt(timerMs)}</div>
+        <div style="font-size:13px;color:var(--text3)">${ttState==='idle' ? 'Select a project and check in' : 'Working on <span style="color:var(--text)">' + (document.getElementById('tt-project') ? document.getElementById('tt-project').value : '') + '</span>'}</div>
+      </div>
+
+      <!-- Form card -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);padding:16px;margin-bottom:12px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:6px">Project</div>
+            <select id="tt-project" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:IBM Plex Sans,sans-serif;font-size:13px;padding:8px 10px;outline:none;cursor:pointer" ${ttState!=='idle'?'disabled':''}>
+              ${projectOpts}
+            </select>
+          </div>
+          <div>
+            <div style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-family:IBM Plex Mono,monospace;margin-bottom:6px">Activity</div>
+            <select id="tt-tag" style="width:100%;background:var(--bg3);border:1px solid var(--border2);border-radius:var(--radius);color:var(--text);font-family:IBM Plex Sans,sans-serif;font-size:13px;padding:8px 10px;outline:none;cursor:pointer" ${ttState!=='idle'?'disabled':''}>
+              ${tagOpts}
+            </select>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          ${btns}
+        </div>
+      </div>
+
+      <!-- Today's entries -->
+      <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius2);overflow:hidden">
+        <div style="padding:10px 16px;border-bottom:1px solid var(--border);font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--text3);font-family:IBM Plex Mono,monospace">Today's entries</div>
+        <div id="tt-entries">${entriesHtml}</div>
+      </div>
+    </div>`;
+
+  // Restart interval if running or paused
+  if (ttInterval) clearInterval(ttInterval);
+  if (ttState !== 'idle') {
+    ttInterval = setInterval(() => {
+      const disp = document.getElementById('tt-display');
+      if (!disp) { clearInterval(ttInterval); return; }
+      if (ttState === 'running') {
+        disp.textContent = ttFmt(Date.now() - ttStart - ttPausedMs);
+      } else if (ttState === 'paused') {
+        disp.textContent = ttFmt(Date.now() - ttPauseStart);
+      }
+      // Refresh entries every 10s
+      const entriesEl = document.getElementById('tt-entries');
+      if (entriesEl && ttEntries.length) {
+        entriesEl.innerHTML = ttEntries.slice().reverse().map(e => {
+          const isActive = e.status === 'active';
+          const ms = isActive
+            ? Date.now() - new Date(e.startTime).getTime() - (e.breakMs || 0)
+            : (e.endTime ? new Date(e.endTime) - new Date(e.startTime) - (e.breakMs||0) : 0);
+          const durColor = isActive ? 'color:var(--green)' : 'color:var(--text2)';
+          return `<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--border);gap:10px">
+            <div style="flex:1;min-width:0">
+              <div style="font-size:11px;font-weight:500;color:var(--accent);font-family:IBM Plex Mono,monospace;margin-bottom:2px">${e.tag||''}</div>
+              <div style="font-size:12px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${e.project||''}</div>
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:12px;font-family:IBM Plex Mono,monospace;color:var(--text)">${ttFmtTime(e.startTime)}${e.endTime?' – '+ttFmtTime(e.endTime):' – now'}</div>
+              <div style="font-size:11px;font-family:IBM Plex Mono,monospace;${durColor}">${ttFmt(Math.max(0,ms))}${isActive?' ▶':''}</div>
+            </div>
+          </div>`;
+        }).join('');
+      }
+    }, 1000);
   }
 }
 
-function updateHeaderDate() {
-  var d = new Date();
-  var days   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-  var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  document.getElementById('header-date').textContent =
-    days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+async function ttCall(action, extra) {
+  const url = TT_WEBHOOKS[action];
+  const proj = document.getElementById('tt-project');
+  const tag = document.getElementById('tt-tag');
+  const payload = Object.assign({
+    person: config.username,
+    project: proj ? proj.value : '',
+    tag: tag ? tag.value : '',
+    timestamp: ttNow()
+  }, extra || {});
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    const data = await r.json().catch(() => ({}));
+    return { ok: r.ok, status: r.status, data };
+  } catch(e) { return { ok: false, status: 0, data: {} }; }
 }
 
-updateHeaderDate();
-setInterval(renderEntries, 10000);
+async function ttCheckin() {
+  const res = await ttCall('checkin');
+  if (res.ok) {
+    ttStart = Date.now(); ttPausedMs = 0;
+    const proj = document.getElementById('tt-project');
+    const tag = document.getElementById('tt-tag');
+    ttEntries.push({ project: proj?proj.value:'', tag: tag?tag.value:'', startTime: new Date().toISOString(), endTime: null, status: 'active', breakMs: 0 });
+    ttState = 'running';
+    showToast('Checked in ✓');
+    renderTimeTracker();
+  } else if (res.status === 409) {
+    showToast(res.data.error || 'Already checked in', true);
+  } else {
+    showToast('Connection error', true);
+  }
+}
+
+async function ttPause() {
+  const res = await ttCall('pause');
+  if (res.ok) {
+    ttPauseStart = Date.now();
+    const e = ttEntries[ttEntries.length-1];
+    if (e) e.status = 'paused';
+    ttState = 'paused';
+    showToast('Paused');
+    renderTimeTracker();
+  } else { showToast('Connection error', true); }
+}
+
+async function ttResume() {
+  const res = await ttCall('resume');
+  if (res.ok) {
+    const pauseDur = Date.now() - ttPauseStart;
+    ttPausedMs += pauseDur;
+    const e = ttEntries[ttEntries.length-1];
+    if (e) { e.breakMs = (e.breakMs||0) + pauseDur; e.status = 'active'; }
+    ttState = 'running';
+    showToast('Resumed');
+    renderTimeTracker();
+  } else { showToast('Connection error', true); }
+}
+
+async function ttCheckout() {
+  const res = await ttCall('checkout');
+  if (res.ok) {
+    const e = ttEntries[ttEntries.length-1];
+    if (e) { e.endTime = new Date().toISOString(); e.status = 'done'; }
+    if (ttInterval) { clearInterval(ttInterval); ttInterval = null; }
+    ttState = 'idle'; ttStart = null; ttPausedMs = 0;
+    showToast('Checked out ✓');
+    renderTimeTracker();
+  } else { showToast('Connection error', true); }
+}
+
+async function ttNewEntry() {
+  const res = await ttCall('checkout');
+  if (res.ok) {
+    const e = ttEntries[ttEntries.length-1];
+    if (e) { e.endTime = new Date().toISOString(); e.status = 'done'; }
+    ttState = 'idle';
+    setTimeout(async () => {
+      const res2 = await ttCall('checkin');
+      if (res2.ok) {
+        ttStart = Date.now(); ttPausedMs = 0;
+        const proj = document.getElementById('tt-project');
+        const tag = document.getElementById('tt-tag');
+        ttEntries.push({ project: proj?proj.value:'', tag: tag?tag.value:'', startTime: new Date().toISOString(), endTime: null, status: 'active', breakMs: 0 });
+        ttState = 'running';
+        showToast('New entry started ✓');
+        renderTimeTracker();
+      } else { showToast('Connection error', true); }
+    }, 500);
+  } else { showToast('Connection error', true); }
+}
+
 </script>
 </body>
 </html>
